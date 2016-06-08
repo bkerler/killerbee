@@ -25,7 +25,8 @@ ASMFLAGS += -x assembler-with-cpp -Wa,-gdwarf2
 
 ## Linker flags
 LDFLAGS = $(COMMON)
-LDFLAGS += --gc-sections -Wl,-Map=RZUSBSTICK.map
+#LDFLAGS += --gc-sections -Wl,-Map=RZUSBSTICK.map
+LDFLAGS += -Wl,-Map=RZUSBSTICK.map
 
 
 ## Intel Hex file production flags

@@ -126,7 +126,7 @@ int main(void) {
     /* Disable modules that are not needed any more. */
     eep_deinit();
     
-    LED_ORANGE_ON();
+    LED_GREEN_ON();
         
     /* Enable interrupts. */
     sei();
