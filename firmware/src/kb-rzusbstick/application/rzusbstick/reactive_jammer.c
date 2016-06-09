@@ -127,6 +127,7 @@ bool reactive_jammer_init(void) {
 
     if (true == init_rf()) {
         rj_state = RJ_IDLE;
+        LED_RED_ON();
         return true;
     } else {
         /* Disable the radio transceiver. */
@@ -146,6 +147,7 @@ void reactive_jammer_deinit(void) {
          */
         rf230_deinit();
         rj_state = RJ_NOT_INITIALIZED;
+        LED_GREEN_ON();
     }
 }
 
