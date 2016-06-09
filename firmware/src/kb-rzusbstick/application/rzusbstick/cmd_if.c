@@ -39,6 +39,7 @@
 
 #include "air_capture.h"
 #include "cmd_if.h"
+#include "reactive_jammer.h"
 
 #include "ieee802_15_4.h"
 #include "ieee802_15_4_const.h"
@@ -192,6 +193,7 @@ typedef enum {
     CMD_IF_AC_MODE,
     CMD_IF_MAC_MODE,
     CMD_IF_NWK_MODE,
+    CMD_IF_JAM_MODE,
 } cmd_if_state_t;
 /*================================= GLOBAL VARIABLES =========================*/
 /*================================= LOCAL VARIABLES  =========================*/
@@ -818,6 +820,13 @@ static void cmd_set_mode(void *cmd_set_mode) {
             cmd_if_state = CMD_IF_NWK_MODE;
             set_mode_status = RESP_SUCCESS;
         }
+    } else if (CMD_MODE_RJAM == (sm->mode)) {
+            if (true != reactive_jammer_init()) {
+                set_mode_status = RESP_HW_TIMEOUT;
+            } else {
+                cmd_if_state = CMD_IF_JAM_MODE;
+                set_mode_status = RESP_SUCCESS;
+            }
     } else {
         set_mode_status = RESP_SEMANTICAL_ERROR;
     }

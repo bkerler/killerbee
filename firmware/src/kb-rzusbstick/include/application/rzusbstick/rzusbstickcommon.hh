@@ -152,6 +152,7 @@
 #define CMD_MODE_MAC (0x02)
 #define CMD_MODE_NWK (0x03)
 #define CMD_MODE_NONE (0x04)
+#define CMD_MODE_RJAM (0x05)
 
 // Scan types
 #define CMD_ED_SCAN      (0x00)
