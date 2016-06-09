@@ -66,11 +66,11 @@ const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
 static bool init_rf(void);
 static void listen_callback(uint8_t isr_event);
 static void transmission_callback(uint8_t isr_event);
-static bool send_jamming_frame(void) {
-static bool listen_enable() {
-static bool listen_disable() {
-static void wait_for_rx_start(void) {
-static void wait_for_state_idle(void) {
+static bool send_jamming_frame(void);
+static bool listen_enable();
+static bool listen_disable();
+static void wait_for_rx_start(void);
+static void wait_for_state_idle(void);
 
 /*! \brief This function is used to initialize the RF230 radio transceiver to be
  *         used for capturing/jamming.
