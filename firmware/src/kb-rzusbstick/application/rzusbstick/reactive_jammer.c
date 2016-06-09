@@ -35,6 +35,7 @@
 #define RJ_IDLE              (0x02) //!< The reactive jammer initialized and ready.
 #define RJ_BUSY_LISTENING    (0x04) //!< The reactive jammer is busy listening.
 #define RJ_BUSY_JAMMING      (0x08) //!< The reactive jammer is busy jamming.
+#define RJ_BUSY_TRANSMITTING (0x10) //!< The reactive jammer is busy transmitting.
 
 #define RJ_TICK_PER_US       (2)   //!< Number of ticks per microsecond.
 
