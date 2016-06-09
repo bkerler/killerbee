@@ -66,6 +66,11 @@ const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
 static bool init_rf(void);
 static void listen_callback(uint8_t isr_event);
 static void transmission_callback(uint8_t isr_event);
+static bool send_jamming_frame(void) {
+static bool listen_enable() {
+static bool listen_disable() {
+static void wait_for_rx_start(void) {
+static void wait_for_state_idle(void) {
 
 /*! \brief This function is used to initialize the RF230 radio transceiver to be
  *         used for capturing/jamming.
@@ -227,7 +232,7 @@ static bool send_jamming_frame(void) {
 }
 
 static bool listen_enable() {
-    if (AC_IDLE != ac_state) { return false; }
+    if (RJ_IDLE != rj_state) { return false; }
 
     /* Initialize the frame pool in the RF230 device driver and set the radio
      * transceiver in receive mode.
@@ -255,7 +260,7 @@ static bool listen_enable() {
 
 static bool listen_disable() {
     /* Perform sanity checks to see if it is  possible to run the function. */
-    if (RJ_BUSY_CAPTURING != rj_state) { return false; }
+    if (RJ_BUSY_LISTENING != rj_state) { return false; }
 
     /* Close stream. */
     rf230_clear_callback_handler();
@@ -263,7 +268,7 @@ static bool listen_disable() {
     delay_us(TIME_P_ON_TO_TRX_OFF);
 
     /* Verify that the TRX_OFF state was entered. */
-    bool ac_close_stream_status = false;
+    bool close_stream_status = false;
     if (TRX_OFF == rf230_subregister_read(SR_TRX_STATUS)) {
         rj_state = RJ_IDLE;
         close_stream_status = true;
@@ -280,7 +285,7 @@ static bool listen_disable() {
 static void listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Record the RSSI and timestamp when we pick up a packet
-        uint32_t time_stamp = vrt_timer_get_tick_cnt() / AC_TICK_PER_US;
+        uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
         RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
         rj_rx_start = true;
     } else {
