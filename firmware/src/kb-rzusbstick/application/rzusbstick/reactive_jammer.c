@@ -181,7 +181,7 @@ bool reactive_jammer_set_channel(uint8_t channel) {
 
 /* This function will enable jamming. */
 bool reactive_jammer_on(void) {
-    while (true) {
+    //while (true) {
         // Wait until transceiver is in the idle state
         wait_for_state_idle();
 
@@ -204,7 +204,7 @@ bool reactive_jammer_on(void) {
             // Send a jamming frame
             send_jamming_frame();
         }
-    }
+    //}
 }
 
 /* This function will disable jamming.
