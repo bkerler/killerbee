@@ -249,8 +249,8 @@ class KillerBee:
     def reactive_jammer_on(self, channel=None):
         return self.driver.reactive_jammer_on(channel)
 
-    def reactive_jammer_off(self, channel=None):
-        return self.driver.reactive_jammer_off(channel)
+    def reactive_jammer_off(self):
+        return self.driver.reactive_jammer_off()
 
     @property
     def channel(self):
