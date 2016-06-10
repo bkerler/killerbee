@@ -210,12 +210,15 @@ bool reactive_jammer_set_channel(uint8_t channel) {
 bool reactive_jammer_on(void) {
     if (RJ_IDLE != rj_state) return false;
 
-    LED_RED_ON();
     // Restart jamming after transmission finishes
     rj_should_continue_jamming = true;
-    jamming_listen_enable();
+    if (jamming_listen_enable()) {
+        rj_should_continue_jamming = true;
+        LED_RED_ON();
+        return true;
+    }
 
-    return true;
+    return false;
 }
 
 /* This function will disable jamming.
@@ -345,6 +348,7 @@ static bool jamming_listen_disable() {
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
 static void jamming_listen_callback(uint8_t isr_event) {
+    LED_ORANGE_ON();
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Record the RSSI and timestamp when we pick up a packet
         //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
