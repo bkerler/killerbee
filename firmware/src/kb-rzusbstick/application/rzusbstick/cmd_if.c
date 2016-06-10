@@ -863,10 +863,8 @@ static void cmd_reactive_jammer_on(void *cmd_reactive_jammer_on) {
 static void cmd_reactive_jammer_off(void *cmd_reactive_jammer_off) {
     uint8_t open_status = RESP_SEMANTICAL_ERROR;
 
-    // TODO: jamming is an infinite loop, so how do I do this properly?
-    if (true == reactive_jammer_off()) {
-        open_status = RESP_SUCCESS;
-    }
+    reactive_jammer_off();
+    open_status = RESP_SUCCESS;
 
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
