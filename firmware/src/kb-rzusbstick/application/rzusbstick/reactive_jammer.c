@@ -193,7 +193,7 @@ bool reactive_jammer_on(void) {
 
         // Read the first few bytes of the frame
         static uint8_t FRAME_READ_LEN = 4;
-        static uint8_t buf[FRAME_READ_LEN];
+        static uint8_t buf[4];
         uint8_t* frame = read_frame_to_buf(&buf, FRAME_READ_LEN);
 
         // Stop listening (to prepare for transmission)
@@ -205,6 +205,7 @@ bool reactive_jammer_on(void) {
             send_jamming_frame();
         }
     //}
+    return true;
 }
 
 /* This function will disable jamming.
@@ -228,7 +229,7 @@ static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len) {
     uint8_t frame_length = SPDR;
 
     // TODO: Ensure no buffer overrun
-    assert(frame_length <= len);
+    //assert(frame_length <= len);
 
     // Request `len` bytes
     // TODO: Can length alone tell us if this is the right kind of packet?
