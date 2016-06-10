@@ -23,7 +23,7 @@ if __name__ == '__main__':
         else:
             if not args.channel:
                 print 'Must specify channel'
-                return
+                exit(1)
             kb.reactive_jammer_on(args.channel)
             print 'Started jamming'
     except KeyboardInterrupt:
