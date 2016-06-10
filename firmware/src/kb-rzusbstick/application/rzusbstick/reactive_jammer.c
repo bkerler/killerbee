@@ -212,8 +212,9 @@ bool reactive_jammer_on(void) {
  *
  *  \ingroup reactive_jammer
  */
-void reactive_jammer_off(void) {
+bool reactive_jammer_off(void) {
     listen_disable();
+    return true;
 }
 
 static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len) {
