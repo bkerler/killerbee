@@ -13,7 +13,6 @@
  *****************************************************************************/
 
 /*================================= INCLUDES         =========================*/
-#include <pthread.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -48,11 +47,8 @@
 /*! \brief Variable holding the reactive jammer's internal state. */
 static uint8_t rj_state = RJ_NOT_INITIALIZED;
 
-static bool rj_rx_start;
 static uint8_t rj_rssi;
 static uint8_t rj_unknown_isr; //!< Incremented each time an unknown interrupt event is received.
-
-static pthread_t jammer_thread;
 
 /*! \brief Frame with randomized data. Used by the jammer. */
 static uint8_t jammer_frame_length = 127;
@@ -68,14 +64,15 @@ const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
                         57,152,73,5,44,63,56,141,211,202,45,224,178,0,0};
 /*================================= PROTOTYPES       =========================*/
 static bool init_rf(void);
-static void listen_callback(uint8_t isr_event);
+static void jamming_listen_callback(uint8_t isr_event);
 static void transmission_callback(uint8_t isr_event);
 static bool send_jamming_frame(void);
-static bool listen_enable();
-static bool listen_disable();
+static bool jamming_listen_enable();
+static bool jamming_listen_disable();
 static void wait_for_rx_start(void);
 static void wait_for_state_idle(void);
 static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len);
+static void reactive_jammer(void);
 
 /*! \brief This function is used to initialize the RF230 radio transceiver to be
  *         used for capturing/jamming.
@@ -127,7 +124,6 @@ bool reactive_jammer_init(void) {
     /* Initialize local variables. */
     rj_unknown_isr = 0;
     rj_rssi = 0;
-    rj_rx_start = false;
 
     if (true == init_rf()) {
         rj_state = RJ_IDLE;
@@ -181,14 +177,10 @@ bool reactive_jammer_set_channel(uint8_t channel) {
     return ac_set_channel_status;
 }
 
-void* reactive_jammer_async(void *arg) {
+static void reactive_jammer(void) {
     while (true) {
-        // Wait until transceiver is in the idle state
-        wait_for_state_idle();
-        LED_GREEN_OFF();
-
         // Listen for incoming packets
-        listen_enable();
+        jamming_listen_enable();
 
         // Wait until a packet is received
         // Will flash orange while waiting
@@ -200,7 +192,7 @@ void* reactive_jammer_async(void *arg) {
         read_frame_to_buf(buf, FRAME_READ_LEN);
 
         // Stop listening (to prepare for transmission)
-        listen_disable();
+        jamming_listen_disable();
 
         // TODO: Decide whether or not to jam
         if (true) {
@@ -211,14 +203,15 @@ void* reactive_jammer_async(void *arg) {
         }
         LED_GREEN_ON();
     }
-
-    return NULL;
 }
 
 /* This function will enable jamming. */
 bool reactive_jammer_on(void) {
-    pthread_create(&jammer_thread, reactive_jammer_async, NULL);
+    if (RJ_IDLE != rj_state) return false;
+
     LED_RED_ON();
+    jamming_listen_enable();
+
     return true;
 }
 
@@ -227,9 +220,7 @@ bool reactive_jammer_on(void) {
  *  \ingroup reactive_jammer
  */
 void reactive_jammer_off(void) {
-    // TODO: not safe
-    pthread_cancel(jammer_thread);
-    listen_disable();
+    jamming_listen_disable();
     LED_RED_OFF();
 }
 
@@ -282,7 +273,7 @@ static bool send_jamming_frame(void) {
     /* Verify that the PLL_ON state was entered. */
     if (PLL_ON != rf230_subregister_read(SR_TRX_STATUS)) {
     } else {
-        rf230_set_callback_handler(transmission_callback);
+        rf230_set_callback_handler(jamming_transmission_callback);
 
         /* Send frame with pin start. */
         rf230_set_slptr_high();
@@ -297,7 +288,7 @@ static bool send_jamming_frame(void) {
     return send_status;
 }
 
-static bool listen_enable() {
+static bool jamming_listen_enable() {
     if (RJ_IDLE != rj_state) { return false; }
 
     /* Initialize the frame pool in the RF230 device driver and set the radio
@@ -314,8 +305,8 @@ static bool listen_enable() {
 
         /* Verify that the state transition to RX_ON was successful. */
         if (RX_ON == rf230_subregister_read(SR_TRX_STATUS)) {
-            /* Set callback for captured frames and update AirCapture status. */
-            rf230_set_callback_handler(listen_callback);
+            /* Set callback for captured frames. */
+            rf230_set_callback_handler(jamming_listen_callback);
             rj_state = RJ_BUSY_LISTENING;
             open_stream_status = true;
         }
@@ -324,7 +315,7 @@ static bool listen_enable() {
     return open_stream_status;
 }
 
-static bool listen_disable() {
+static bool jamming_listen_disable() {
     /* Perform sanity checks to see if it is  possible to run the function. */
     if (RJ_BUSY_LISTENING != rj_state) { return false; }
 
@@ -348,18 +339,34 @@ static bool listen_disable() {
  *
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
-static void listen_callback(uint8_t isr_event) {
+static void jamming_listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Record the RSSI and timestamp when we pick up a packet
         //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
         RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
-        rj_rx_start = true;
+
+        // TODO: Do something with these bytes
+        // Read the first few bytes of the frame
+        static uint8_t FRAME_READ_LEN = 4;
+        uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
+        read_frame_to_buf(buf, FRAME_READ_LEN);
+
+        // Stop listening (to prepare for transmission)
+        jamming_listen_disable();
+
+        // TODO: Decide whether or not to jam
+        if (true) {
+            // Send a jamming frame
+            LED_ORANGE_ON();
+            send_jamming_frame();
+            LED_ORANGE_OFF();
+        }
     } else {
         rj_unknown_isr++;
     }
 }
 
-static void transmission_callback(uint8_t isr_event) {
+static void jamming_transmission_callback(uint8_t isr_event) {
     if (RF230_TRX_END_MASK == (isr_event & RF230_TRX_END_MASK)) {
         RF230_QUICK_CLEAR_ISR_CALLBACK();
 
@@ -367,17 +374,11 @@ static void transmission_callback(uint8_t isr_event) {
         RF230_QUICK_SUBREGISTER_WRITE(0x02, 0x1f, 0, CMD_FORCE_TRX_OFF);
         delay_us(TIME_CMD_FORCE_TRX_OFF);
         rj_state = RJ_IDLE;
-    }
-}
 
-static inline void wait_for_rx_start(void) {
-    uint8_t counter = 0;
-    while (!rj_rx_start) {
-        if (counter == 0) LED_RED_ON();
-        else if (counter == 128) LED_RED_OFF();
-        counter++;
-    };
-    rj_rx_start = false;
+        if (rj_should_continue_jamming) {
+            jamming_listen_enable();
+        }
+    }
 }
 
 static inline void wait_for_state_idle(void) {
