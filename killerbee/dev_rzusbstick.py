@@ -363,8 +363,8 @@ class RZUSBSTICK:
 
     # KillerBee expects the driver to implement this function
     def reactive_jammer_on(self, channel=None):
-        if self.__cmdmode != RZ_CMD_MODE_RJ:
-            self._set_mode(RZ_CMD_MODE_RJ)
+        if self.__cmdmode != RZ_CMD_MODE_RJAM:
+            self._set_mode(RZ_CMD_MODE_RJAM)
 
         if channel != None:
             self.rj_set_channel(channel)
@@ -431,8 +431,8 @@ class RZUSBSTICK:
         '''
         self.capabilities.require(KBCapabilities.SETCHAN)
 
-        if self.__cmdmode != RZ_CMD_MODE_RJ:
-            self._set_mode(RZ_CMD_MODE_RJ)
+        if self.__cmdmode != RZ_CMD_MODE_RJAM:
+            self._set_mode(RZ_CMD_MODE_RJAM)
 
         if 11 <= channel <= 26:
             self._channel = channel #update driver's notion of current channel
