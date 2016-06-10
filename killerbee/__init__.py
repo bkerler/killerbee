@@ -246,6 +246,12 @@ class KillerBee:
         '''
         return self.driver.sniffer_off()
 
+    def reactive_jammer_on(self, channel=None):
+        return self.driver.reactive_jammer_on(channel)
+
+    def reactive_jammer_off(self, channel=None):
+        return self.driver.reactive_jammer_off(channel)
+
     @property
     def channel(self):
         """Getter function for the channel that was last set on the device."""

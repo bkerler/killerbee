@@ -24,7 +24,6 @@
 /*================================= INCLUDES         =========================*/
 #include <stdint.h>
 #include <stdbool.h>
-
 #include "vrt_mem.h"
 #include "vrt_timer.h"
 #include "led.h"
@@ -493,11 +492,11 @@ uint8_t air_capture_inject_frame(uint8_t length, uint8_t *frame) {
         ac_inject_frame_status = true;
     } // END: if (PLL_ON != rf230_subregister_read(SR_TRX_STATUS)) ...
 
-	if (ac_inject_frame_status == true) {
-		return 0;
-	} else {
-	    	return 5;
-	}
+  if (ac_inject_frame_status == true) {
+    return 0;
+  } else {
+        return 5;
+  }
 }
 
 /* This function starts the jammer. */

@@ -72,6 +72,7 @@ static bool listen_enable();
 static bool listen_disable();
 static void wait_for_rx_start(void);
 static void wait_for_state_idle(void);
+static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len);
 
 /*! \brief This function is used to initialize the RF230 radio transceiver to be
  *         used for capturing/jamming.
@@ -183,14 +184,26 @@ bool reactive_jammer_on(void) {
     while (true) {
         // Wait until transceiver is in the idle state
         wait_for_state_idle();
+
         // Listen for incoming packets
         listen_enable();
+
         // Wait until a packet is received
         wait_for_rx_start();
+
+        // Read the first few bytes of the frame
+        static uint8_t FRAME_READ_LEN = 4;
+        static uint8_t buf[FRAME_READ_LEN];
+        uint8_t* frame = read_frame_to_buf(&buf, FRAME_READ_LEN);
+
         // Stop listening (to prepare for transmission)
         listen_disable();
-        // Send a jamming frame
-        send_jamming_frame();
+
+        // TODO: Decide whether or not to jam
+        if (true) {
+            // Send a jamming frame
+            send_jamming_frame();
+        }
     }
 }
 
@@ -199,7 +212,39 @@ bool reactive_jammer_on(void) {
  *  \ingroup reactive_jammer
  */
 void reactive_jammer_off(void) {
-    // Stop listening
+    listen_disable();
+}
+
+static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len) {
+    // "Each access starts by setting ~SEL = L."
+    RF230_SS_LOW();
+
+    // "The first byte transferred on MOSI is the command byte and must indicate
+    // a Frame Buffer access mode."
+    SPDR = RF230_TRX_CMD_FR;
+    RF230_WAIT_FOR_SPI_TX_COMPLETE();
+
+    // Get the length of the incoming frame
+    uint8_t frame_length = SPDR;
+
+    // TODO: Ensure no buffer overrun
+    assert(frame_length <= len);
+
+    // Request `len` bytes
+    // TODO: Can length alone tell us if this is the right kind of packet?
+    SPDR = len;
+    RF230_WAIT_FOR_SPI_TX_COMPLETE();
+
+    for (int i = 0; i < len; ++i) {
+        const uint8_t byte = SPDR;
+        SPDR = byte; // Stall for time
+
+        // TODO: Do something with the byte
+        dst_buf[i] = byte;
+        RF230_WAIT_FOR_SPI_TX_COMPLETE();
+    }
+
+    RF230_SS_HIGH();
 }
 
 static bool send_jamming_frame(void) {
@@ -288,7 +333,7 @@ static bool listen_disable() {
 static void listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Record the RSSI and timestamp when we pick up a packet
-        uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
+        //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
         RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
         rj_rx_start = true;
     } else {

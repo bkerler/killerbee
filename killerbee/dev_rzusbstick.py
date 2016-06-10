@@ -33,6 +33,9 @@ RZ_CMD_CLOSE_STREAM         = 0x0A  #: RZUSB opcode to close a stream for packet
 RZ_CMD_INJECT_FRAME         = 0x0D  #: RZUSB opcode to specify a frame to inject
 RZ_CMD_JAMMER_ON            = 0x0E  #: RZUSB opcode to turn the jammer function on
 RZ_CMD_JAMMER_OFF           = 0x0F  #: RZUSB opcode to turn the jammer function off
+RZ_CMD_RJ_SET_CHANNEL       = 0xC0  #: RZUSB opcode to set reactive jammer channel
+RZ_CMD_RJ_ON                = 0xC1  #: RZUSB opcode to enable reactive jammer
+RZ_CMD_RJ_OFF               = 0xC2  #: RZUSB opcode to enable reactive jammer
 
 # Operating modes following RZ_CMD_SET_MODE function
 RZ_CMD_MODE_AC              = 0x00  #: RZUSB mode for aircapture (inject + sniff)
@@ -40,6 +43,7 @@ RZ_CMD_MODE_AC              = 0x00  #: RZUSB mode for aircapture (inject + sniff
 #RZ_CMD_MODE_MAC             = 0x02
 #RZ_CMD_MODE_NWK             = 0x03
 RZ_CMD_MODE_NONE            = 0x04 #: RZUSB no mode specified
+RZ_CMD_MODE_RJAM            = 0x05
 
 RZ_RESP_LOCAL_TIMEOUT       = 0x00 #: RZUSB Response: Local Timeout Error
 RZ_RESP_SUCCESS             = 0x80 #: RZUSB Response: Success
@@ -313,6 +317,20 @@ class RZUSBSTICK:
         self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_CLOSE_STREAM])
         self.__stream_open = False
 
+    def _reactive_jammer_on(self):
+        '''
+        Opens a data stream for receiving packets.
+        '''
+        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_RJ_ON])
+        self.__stream_open = True
+
+    def _reactive_jammer_off(self):
+        '''
+        Opens a data stream for receiving packets.
+        '''
+        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_RJ_OFF])
+        self.__stream_open = True
+
     # KillerBee expects the driver to implement this function
     def sniffer_on(self, channel=None):
         '''
@@ -342,6 +360,20 @@ class RZUSBSTICK:
         @rtype: None
         '''
         self._close_stream()
+
+    # KillerBee expects the driver to implement this function
+    def reactive_jammer_on(self, channel=None):
+        if self.__cmdmode != RZ_CMD_MODE_RJ:
+            self._set_mode(RZ_CMD_MODE_RJ)
+
+        if channel != None:
+            self.rj_set_channel(channel)
+
+        self._reactive_jammer_on()
+
+    # KillerBee expects the driver to implement this function
+    def reactive_jammer_off(self):
+        self._reactive_jammer_off()
 
     def jammer_on(self, channel=None):
         '''
@@ -385,6 +417,26 @@ class RZUSBSTICK:
         if 11 <= channel <= 26:
             self._channel = channel #update driver's notion of current channel
             self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_SET_CHANNEL, channel])
+        else:
+            raise Exception('Invalid channel')
+
+    # KillerBee expects the driver to implement this function
+    def rj_set_channel(self, channel):
+        '''
+        Sets the radio interface to the specifid channel.  Currently, support is
+        limited to 2.4 GHz channels 11 - 26.
+        @type channel: Integer
+        @param channel: Sets the channel, optional
+        @rtype: None
+        '''
+        self.capabilities.require(KBCapabilities.SETCHAN)
+
+        if self.__cmdmode != RZ_CMD_MODE_RJ:
+            self._set_mode(RZ_CMD_MODE_RJ)
+
+        if 11 <= channel <= 26:
+            self._channel = channel #update driver's notion of current channel
+            self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_RJ_SET_CHANNEL, channel])
         else:
             raise Exception('Invalid channel')
 
