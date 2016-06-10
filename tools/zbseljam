@@ -17,12 +17,12 @@ if __name__ == '__main__':
     # try-except block to catch keyboard interrupt.
     try:
         kb = KillerBee(device=args.devstring)
-        if (args.stop):
+        if args.stop:
             kb.reactive_jammer_off(args.channel)
             print 'Stopped jamming'
         else:
             if not args.channel:
-            print 'Must specify channel channel'
+                print 'Must specify channel'
                 return
             kb.reactive_jammer_on(args.channel)
             print 'Started jamming'
