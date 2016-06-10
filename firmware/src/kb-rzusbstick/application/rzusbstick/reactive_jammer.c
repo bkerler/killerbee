@@ -51,6 +51,8 @@ static bool rj_rx_start;
 static uint8_t rj_rssi;
 static uint8_t rj_unknown_isr; //!< Incremented each time an unknown interrupt event is received.
 
+static pthread_t jammer_thread;
+
 /*! \brief Frame with randomized data. Used by the jammer. */
 static uint8_t jammer_frame_length = 127;
 const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
@@ -128,7 +130,6 @@ bool reactive_jammer_init(void) {
 
     if (true == init_rf()) {
         rj_state = RJ_IDLE;
-        LED_RED_ON();
         return true;
     } else {
         /* Disable the radio transceiver. */
@@ -179,16 +180,17 @@ bool reactive_jammer_set_channel(uint8_t channel) {
     return ac_set_channel_status;
 }
 
-/* This function will enable jamming. */
-bool reactive_jammer_on(void) {
-    //while (true) {
+void* reactive_jammer_async(void *arg) {
+    while (true) {
         // Wait until transceiver is in the idle state
         wait_for_state_idle();
+        LED_GREEN_OFF();
 
         // Listen for incoming packets
         listen_enable();
 
         // Wait until a packet is received
+        // Will flash orange while waiting
         wait_for_rx_start();
 
         // Read the first few bytes of the frame
@@ -202,9 +204,20 @@ bool reactive_jammer_on(void) {
         // TODO: Decide whether or not to jam
         if (true) {
             // Send a jamming frame
+            LED_ORANGE_ON();
             send_jamming_frame();
+            LED_ORANGE_OFF();
         }
-    //}
+        LED_GREEN_ON();
+    }
+
+    return NULL;
+}
+
+/* This function will enable jamming. */
+bool reactive_jammer_on(void) {
+    pthread_create(&jammer_thread, reactive_jammer_async, NULL);
+    LED_RED_ON();
     return true;
 }
 
@@ -213,7 +226,10 @@ bool reactive_jammer_on(void) {
  *  \ingroup reactive_jammer
  */
 void reactive_jammer_off(void) {
+    // TODO: not safe
+    pthread_cancel(jammer_thread);
     listen_disable();
+    LED_RED_OFF();
 }
 
 static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len) {
@@ -354,7 +370,11 @@ static void transmission_callback(uint8_t isr_event) {
 }
 
 static inline void wait_for_rx_start(void) {
+    uint8_t counter = 0;
     while (!rj_rx_start) {
+        if (counter == 0) LED_RED_ON();
+        else if (counter == 128) LED_RED_OFF();
+        counter++;
     };
     rj_rx_start = false;
 }
