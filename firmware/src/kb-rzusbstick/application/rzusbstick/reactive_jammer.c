@@ -66,7 +66,7 @@ const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
 /*================================= PROTOTYPES       =========================*/
 static bool init_rf(void);
 static void jamming_listen_callback(uint8_t isr_event);
-static void transmission_callback(uint8_t isr_event);
+static void jamming_transmission_callback(uint8_t isr_event);
 static bool send_jamming_frame(void);
 static bool jamming_listen_enable();
 static bool jamming_listen_disable();
@@ -384,12 +384,6 @@ static void jamming_transmission_callback(uint8_t isr_event) {
             jamming_listen_enable();
         }
     }
-}
-
-static inline void wait_for_state_idle(void) {
-    while (rj_state != RJ_IDLE) {
-        delay_us(10); // TODO
-    };
 }
 
 //! @}
