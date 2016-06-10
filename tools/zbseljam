@@ -18,7 +18,7 @@ if __name__ == '__main__':
     try:
         kb = KillerBee(device=args.devstring)
         if args.stop:
-            kb.reactive_jammer_off(args.channel)
+            kb.reactive_jammer_off()
             print 'Stopped jamming'
         else:
             if not args.channel:
