@@ -193,8 +193,8 @@ bool reactive_jammer_on(void) {
 
         // Read the first few bytes of the frame
         static uint8_t FRAME_READ_LEN = 4;
-        static uint8_t buf[4];
-        uint8_t* frame = read_frame_to_buf(&buf, FRAME_READ_LEN);
+        uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
+        uint8_t* frame = read_frame_to_buf(buf, FRAME_READ_LEN);
 
         // Stop listening (to prepare for transmission)
         listen_disable();
