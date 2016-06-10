@@ -49,6 +49,7 @@ static uint8_t rj_state = RJ_NOT_INITIALIZED;
 
 static uint8_t rj_rssi;
 static uint8_t rj_unknown_isr; //!< Incremented each time an unknown interrupt event is received.
+static bool rj_should_continue_jamming;
 
 /*! \brief Frame with randomized data. Used by the jammer. */
 static uint8_t jammer_frame_length = 127;
@@ -69,7 +70,6 @@ static void transmission_callback(uint8_t isr_event);
 static bool send_jamming_frame(void);
 static bool jamming_listen_enable();
 static bool jamming_listen_disable();
-static void wait_for_rx_start(void);
 static void wait_for_state_idle(void);
 static void read_frame_to_buf(uint8_t* dst_buf, const uint8_t len);
 static void reactive_jammer(void);
@@ -124,6 +124,7 @@ bool reactive_jammer_init(void) {
     /* Initialize local variables. */
     rj_unknown_isr = 0;
     rj_rssi = 0;
+    rj_should_continue_jamming = false;
 
     if (true == init_rf()) {
         rj_state = RJ_IDLE;
@@ -177,7 +178,7 @@ bool reactive_jammer_set_channel(uint8_t channel) {
     return ac_set_channel_status;
 }
 
-static void reactive_jammer(void) {
+/*static void reactive_jammer(void) {
     while (true) {
         // Listen for incoming packets
         jamming_listen_enable();
@@ -203,13 +204,15 @@ static void reactive_jammer(void) {
         }
         LED_GREEN_ON();
     }
-}
+}*/
 
 /* This function will enable jamming. */
 bool reactive_jammer_on(void) {
     if (RJ_IDLE != rj_state) return false;
 
     LED_RED_ON();
+    // Restart jamming after transmission finishes
+    rj_should_continue_jamming = true;
     jamming_listen_enable();
 
     return true;
@@ -220,6 +223,8 @@ bool reactive_jammer_on(void) {
  *  \ingroup reactive_jammer
  */
 void reactive_jammer_off(void) {
+    // Do not restart jamming after transmission finishes
+    rj_should_continue_jamming = false;
     jamming_listen_disable();
     LED_RED_OFF();
 }
