@@ -287,6 +287,18 @@ static bool send_jamming_frame(void) {
         rf230_set_slptr_high();
         rf230_set_slptr_low();
         rf230_frame_write(jammer_frame_length, jammer_frame);
+        rf230_set_slptr_high();
+        rf230_set_slptr_low();
+        rf230_frame_write(jammer_frame_length, jammer_frame);
+        rf230_set_slptr_high();
+        rf230_set_slptr_low();
+        rf230_frame_write(jammer_frame_length, jammer_frame);
+        rf230_set_slptr_high();
+        rf230_set_slptr_low();
+        rf230_frame_write(jammer_frame_length, jammer_frame);
+        rf230_set_slptr_high();
+        rf230_set_slptr_low();
+        rf230_frame_write(jammer_frame_length, jammer_frame);
 
         /* Update state information. */
         rj_state = RJ_BUSY_TRANSMITTING;
