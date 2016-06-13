@@ -348,7 +348,6 @@ static bool jamming_listen_disable() {
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
 static void jamming_listen_callback(uint8_t isr_event) {
-    LED_ORANGE_ON();
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Stop listening (to prepare for transmission)
         jamming_listen_disable();
@@ -366,9 +365,9 @@ static void jamming_listen_callback(uint8_t isr_event) {
         // TODO: Decide whether or not to jam
         //if (true) {
             // Send a jamming frame
-            //LED_ORANGE_ON();
+            LED_ORANGE_ON();
             send_jamming_frame();
-            //LED_ORANGE_OFF();
+            LED_ORANGE_OFF();
         //}
     } else {
         rj_unknown_isr++;
