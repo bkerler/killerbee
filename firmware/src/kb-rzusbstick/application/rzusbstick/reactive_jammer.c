@@ -350,26 +350,26 @@ static bool jamming_listen_disable() {
 static void jamming_listen_callback(uint8_t isr_event) {
     LED_ORANGE_ON();
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
-        // Record the RSSI and timestamp when we pick up a packet
-        //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
-        RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
-
-        // TODO: Do something with these bytes
-        // Read the first few bytes of the frame
-        static uint8_t FRAME_READ_LEN = 4;
-        uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
-        read_frame_to_buf(buf, FRAME_READ_LEN);
-
         // Stop listening (to prepare for transmission)
         jamming_listen_disable();
 
+        // Record the RSSI and timestamp when we pick up a packet
+        //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
+        //RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
+
+        // TODO: Do something with these bytes
+        // Read the first few bytes of the frame
+        //static uint8_t FRAME_READ_LEN = 4;
+        //uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
+        //read_frame_to_buf(buf, FRAME_READ_LEN);
+
         // TODO: Decide whether or not to jam
-        if (true) {
+        //if (true) {
             // Send a jamming frame
-            LED_ORANGE_ON();
+            //LED_ORANGE_ON();
             send_jamming_frame();
-            LED_ORANGE_OFF();
-        }
+            //LED_ORANGE_OFF();
+        //}
     } else {
         rj_unknown_isr++;
     }
