@@ -359,6 +359,9 @@ static bool jamming_listen_disable() {
  *
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
+
+static uint8_t FRAME_READ_LEN = 9;
+static uint8_t* g_buffer = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
 static void jamming_listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Stop listening (to prepare for transmission)
@@ -368,19 +371,19 @@ static void jamming_listen_callback(uint8_t isr_event) {
         //uint32_t time_stamp = vrt_timer_get_tick_cnt() / RJ_TICK_PER_US;
         //RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, rj_rssi);
 
-        // TODO: Do something with these bytes
         // Read the first few bytes of the frame
-        //static uint8_t FRAME_READ_LEN = 4;
-        //uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
-        //read_frame_to_buf(buf, FRAME_READ_LEN);
+        read_frame_to_buf(g_buffer, FRAME_READ_LEN);
 
-        // TODO: Decide whether or not to jam
-        //if (true) {
+        // Decide whether or not to jam
+        const uint16_t src = (g_buffer[8] << 8) || (g_buffer[7]);
+        const uint16_t dst = (g_buffer[6] << 8) || (g_buffer[5]);
+        // Jam broadcast packets from the root
+        if (src == 0x0000 && dst == 0xffff) {
             // Send a jamming frame
             LED_ORANGE_ON();
             send_jamming_frame();
             LED_ORANGE_OFF();
-        //}
+        }
     } else {
         rj_unknown_isr++;
     }
