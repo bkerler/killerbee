@@ -378,6 +378,8 @@ static void jamming_listen_callback(uint8_t isr_event) {
         const uint16_t src = (g_buffer[8] << 8) || (g_buffer[7]);
         const uint16_t dst = (g_buffer[6] << 8) || (g_buffer[5]);
         // Jam broadcast packets from the root
+        if (src == 0x0000) LED_ORANGE_ON();
+        if (dst == 0xffff) LED_BLUE_ON();
         if (src == 0x0000 && dst == 0xffff) {
             // Send a jamming frame
             LED_ORANGE_ON();
