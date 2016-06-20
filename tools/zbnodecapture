@@ -61,9 +61,9 @@ if __name__ == '__main__':
                 packet = kb.pnext()
                 if packet:
                     print '  Got a packet... ',
-                    packet_bytes = packet['bytes']
+                    packet_bytes = str.encode(packet['bytes'])
                     # Beacon responses have 0b000 at the end of their first byte
-                    if (int(packet_bytes[0]) & 0b111 == 0b000):
+                    if (packet_bytes[0] & 0b111 == 0b000):
                         print('Packet is beacon response!')
                         beacon_response_bytes = packet['bytes']
                         got_beacon_response = True
@@ -83,7 +83,7 @@ if __name__ == '__main__':
                 packet_bytes = packet['bytes']
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x07 as their 7th byte
-                if (int(packet_bytes[0]) & 0b111 == 0b011 and packet_bytes[7] == 0x07):
+                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
                     print('  Got beacon request.')
                     got_beacon_request = True
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
                 packet_bytes = packet['bytes']
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x07 as their 7th byte
-                if (int(packet_bytes[0]) & 0b111 == 0b011 and packet_bytes[7] == 0x07):
+                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
                     print('  Got beacon request.')
                     got_beacon_request = True
 
@@ -128,7 +128,7 @@ if __name__ == '__main__':
                 packet_bytes = packet['bytes']
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x01 as their 17th byte
-                if (int(packet_bytes[0]) & 0b111 == 0b011 and packet_bytes[7] == 0x07):
+                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
                     print('  Got association request.')
                     got_assoc_request = True
 
