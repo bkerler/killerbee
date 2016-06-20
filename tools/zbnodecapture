@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
         # Wait for another beacon request
         print('3. Listening for a beacon request or orphan notification from another device...')
-        got_beacon_request = False
+        got_beacon_request = True
         counter = 1
         while not got_beacon_request:
             packet = kb.pnext()
