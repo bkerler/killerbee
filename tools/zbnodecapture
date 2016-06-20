@@ -18,7 +18,7 @@ BEACON_REQUEST_PKT_BYTES = str(bytearray([
         ]))
 
 # Jam time, in microseconds
-JAM_TIME_SEC = 0.4
+JAM_TIME_SEC = 1
 
 # Random data
 JAM_PKT_BYTES = str(bytearray([
