@@ -85,7 +85,7 @@ if __name__ == '__main__':
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x07 as their 7th byte
                 if (packet_bytes[0] & 0b111 == 0b011 and \
-                        (packet_bytes[7] == 0x06 or packet_bytes[7] == 0x07)):
+                        (packet_bytes[7] == 0x06 or packet_bytes[17] == 0x07)):
                     print('  Got beacon request.')
                     got_beacon_request = True
                 else:
