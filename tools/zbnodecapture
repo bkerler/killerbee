@@ -102,7 +102,7 @@ if __name__ == '__main__':
         time_start_sec = time.time();
         elapsed = 0
         while elapsed < JAM_TIME_SEC:
-            kb.inject(JAM_PKT_BYTES, None, 10, 0)
+            kb.inject(JAM_PKT_BYTES, None, 100, 0)
             elapsed = time.time() - time_start_sec
             print(str(100*round(min(1,elapsed/JAM_TIME_SEC), 2)) + '%')
 
