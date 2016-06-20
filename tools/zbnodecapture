@@ -60,7 +60,7 @@ if __name__ == '__main__':
             while tries > 0 and not got_beacon_response:
                 packet = kb.pnext()
                 if packet:
-                    print('  Got a packet... ', end='')
+                    print '  Got a packet... ',
                     packet_bytes = packet['bytes']
                     # Beacon responses have 0b000 at the end of their first byte
                     if (packet_bytes[0] & 0b111 == 0b000):
