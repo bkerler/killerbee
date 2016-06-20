@@ -29,7 +29,8 @@ JAM_PKT_BYTES = str(bytearray([
         166,158,21,13,108,68,112,53,240,100,214,126,72,61,
         80,98,47,198,48,231,96,248,220,92,95,8,195,185,19,
         168,190,233,122,129,101,188,210,46,85,229,144,247,
-        167,123,194,193,234,74,174,147,242,255,179,197,103
+        167,123,194,193,234,74,174,147,242,255,179,197,103,
+        57,152,73,5,44,63,56,141,211,202,45,224,178
         ]))
 
 # Command line main function
@@ -92,8 +93,9 @@ if __name__ == '__main__':
         time_start_us = time.time();
         time_us = time_start_us
         while time_us - time_start_us < (JAM_TIME_SEC * 100000):
+            #kb.inject(BEACON_REQUEST_PKT_BYTES, args.channel, 1, 0)
             kb.inject(BEACON_REQUEST_PKT_BYTES, args.channel, 1, 0)
-            time_us = time.time();
+            time_us = time.time()
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
