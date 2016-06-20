@@ -100,7 +100,7 @@ if __name__ == '__main__':
         while elapsed < JAM_TIME_SEC:
             kb.inject(JAM_PKT_BYTES, None, 10, 0)
             elapsed = time.time() - time_start_sec
-            print('Elapsed: ' + str(round(elapsed, 2)) + ' sec.'
+            print('Elapsed: ' + str(round(elapsed, 2)) + ' sec.')
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
