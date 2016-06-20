@@ -96,13 +96,8 @@ if __name__ == '__main__':
         # TODO: Is this method sufficient for jamming?
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
         time_start_us = time.time();
-        time_us = time_start_us
-        while time_us - time_start_us < (JAM_TIME_SEC * 100000):
-            try:
-                kb.inject(JAM_PKT_BYTES, None, 10, 0)
-            except:
-                print('exception')
-            time_us = time.time()
+        while time.time() - time_start_us < (JAM_TIME_SEC * 100000):
+            kb.inject(JAM_PKT_BYTES, None, 10, 0)
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
