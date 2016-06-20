@@ -51,7 +51,7 @@ if __name__ == '__main__':
         while not got_beacon_response:
             # Send request
             print('1. Sending beacon request.')
-            kb.inject(BEACON_REQUEST_PKT_BYTES)
+            kb.inject(BEACON_REQUEST_PKT_BYTES, args.channel, 1, 0)
 
             # Get the response. If, after 10 packets, we haven't gotten a
             # response, assume the request was lost and try to resend it
