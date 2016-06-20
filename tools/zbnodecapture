@@ -93,6 +93,7 @@ if __name__ == '__main__':
         time_start_us = time.time();
         time_us = time_start_us
         while time_us - time_start_us < (JAM_TIME_SEC * 100000):
+            print('Injecting packet.')
             kb.inject(JAM_PKT_BYTES)
             time_us = time.time()
 
