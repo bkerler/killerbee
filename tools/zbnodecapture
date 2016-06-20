@@ -92,6 +92,10 @@ if __name__ == '__main__':
                     print('  Ignoring packet (' + str(counter) + '): not beacon request.')
                     counter += 1
 
+        # Reset the device
+        kb.close()
+        kb = KillerBee(device=args.devstring)
+
         # Jam for 0.4 sec
         # TODO: Is this method sufficient for jamming?
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
