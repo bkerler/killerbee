@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import array
 import sys
 import time
 
@@ -10,15 +11,15 @@ from killerbee import *
 CHANNEL_INCREMENT = 2
 
 # Beacon request packet (captured via Wireshark)
-BEACON_REQUEST_PKT = [
+BEACON_REQUEST_PKT = str(bytearray([
         0x03, 0x08, 0xb4, 0xff, 0xff, 0xff, 0xff, 0x07
-        ]
+        ]))
 
 # Jam time, in microseconds
 JAM_TIME_US = 400000
 
 # Random data
-JAM_PKT_BYTES = [
+JAM_PKT_BYTES = str(bytearray([
         186,38,120,91,206,116,184,22,42,239,243,204,139,78,
         83,10,226,215,183,60,86,76,181,102,219,30,87,238,
         230,244,67,26,6,223,205,159,134,62,138,121,58,4,9,
@@ -28,7 +29,7 @@ JAM_PKT_BYTES = [
         168,190,233,122,129,101,188,210,46,85,229,144,247,
         167,123,194,193,234,74,174,147,242,255,179,197,103,
         57,152,73,5,44,63,56,141,211,202,45,224,178,0,0
-        ]
+        ]))
 
 # Command line main function
 if __name__ == '__main__':
@@ -107,6 +108,7 @@ if __name__ == '__main__':
                 got_assoc_request = True
 
         # Construct association response
+        # TODO: This is complicated
 
         # Send forged association response
         #kb.inject(assoc_response_pkt_bytes, args.channel, 1, 0)
