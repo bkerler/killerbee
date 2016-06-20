@@ -62,7 +62,7 @@ RZ_RESP_PRITMITIVE_UNKNOWN  = 0x8C #: RZUSB Response: Primitive Unknown Error
 RZ_RESP_COMMAND_UNKNOWN     = 0x8D #: RZUSB Response: Command Unknown Error
 RZ_RESP_BUSY_SCANING        = 0x8E #: RZUSB Response: Busy Scanning Error
 RZ_RESP_BUSY_CAPTURING      = 0x8F #: RZUSB Response: Busy Capturing Error
-RZ_RESP_OUT_OF_MEMORY       = 0x90 #: RZUSB Response: Out of Memory Error 
+RZ_RESP_OUT_OF_MEMORY       = 0x90 #: RZUSB Response: Out of Memory Error
 RZ_RESP_BUSY_JAMMING        = 0x91 #: RZUSB Response: Busy Jamming Error
 RZ_RESP_NOT_INITIALIZED     = 0x92 #: RZUSB Response: Not Initialized Error
 RZ_RESP_NOT_IMPLEMENTED     = 0x93 #: RZUSB Response: Opcode Not Implemented Error
@@ -251,7 +251,7 @@ class RZUSBSTICK:
     def __usb_write(self, endpoint, data):
         '''
         Write data to the USB device opened as self.handle.
-        
+
         @type endpoint: Integer
         @param endpoint: The USB endpoint to write to
         @type data: Mixed
@@ -471,7 +471,7 @@ class RZUSBSTICK:
         packet += "\x00\x00"
 
         for pnum in xrange(count):
-            # Format for packet is opcode RZ_CMD_INJECT_FRAME, one-byte length, 
+            # Format for packet is opcode RZ_CMD_INJECT_FRAME, one-byte length,
             # packet data
             self.__usb_write(RZ_USB_COMMAND_EP, struct.pack("BB", RZ_CMD_INJECT_FRAME, len(packet)) + packet)
             time.sleep(delay)
@@ -534,7 +534,7 @@ class RZUSBSTICK:
         else:
             return None
             #raise Exception("Unrecognized AirCapture Data Response: 0x%02x" % pdata[0])
- 
+
     def ping(self, da, panid, sa, channel=None):
         '''
         Not yet implemented.
