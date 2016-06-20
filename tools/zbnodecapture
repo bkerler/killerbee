@@ -98,7 +98,10 @@ if __name__ == '__main__':
         time_start_us = time.time();
         time_us = time_start_us
         while time_us - time_start_us < (JAM_TIME_SEC * 100000):
-            kb.inject(JAM_PKT_BYTES, None, 10, 0)
+            try:
+                kb.inject(JAM_PKT_BYTES, None, 10, 0)
+            except:
+                print('exception')
             time_us = time.time()
 
         # Increment channel
