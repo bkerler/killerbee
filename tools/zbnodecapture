@@ -77,6 +77,7 @@ if __name__ == '__main__':
         # Wait for another beacon request
         print('3. Listening for a beacon request from another device...')
         got_beacon_request = False
+        counter = 1
         while not got_beacon_request:
             packet = kb.pnext()
             if packet:
@@ -88,7 +89,8 @@ if __name__ == '__main__':
                     print('  Got beacon request.')
                     got_beacon_request = True
                 else:
-                    print('  Ignoring packet: not beacon request.')
+                    print('  Ignoring packet (' + str(counter) + '): not beacon request.')
+                    counter += 1
 
         kb.set_channel(args.channel)
         # Jam for 0.4 sec
