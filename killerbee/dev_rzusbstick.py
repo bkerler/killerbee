@@ -344,6 +344,19 @@ class RZUSBSTICK:
         '''
         self._close_stream()
 
+    def should_exist(self):
+        jammer_off()
+
+    def jammer_off(self, channel=None):
+        '''
+        Not yet implemented.  Stay tuned.
+        @type channel: Integer
+        @rtype: None
+        '''
+        self.capabilities.require(KBCapabilities.PHYJAM)
+
+        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_JAMMER_OFF])
+
     def jammer_on(self, channel=None):
         '''
         Not yet implemented.  Stay tuned.
@@ -360,16 +373,6 @@ class RZUSBSTICK:
             self.set_channel(channel)
 
         self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_JAMMER_ON])
-
-    def jammer_off(self, channel=None):
-        '''
-        Not yet implemented.  Stay tuned.
-        @type channel: Integer
-        @rtype: None
-        '''
-        self.capabilities.require(KBCapabilities.PHYJAM)
-
-        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_JAMMER_OFF])
 
     # KillerBee expects the driver to implement this function
     def set_channel(self, channel):
