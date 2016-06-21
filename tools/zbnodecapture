@@ -99,7 +99,7 @@ if __name__ == '__main__':
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
         kb.jammer_on()
-        time.sleep(JAME_TIME_SEC)
+        time.sleep(JAM_TIME_SEC)
         kb.jammer_off()
 
         # Increment channel
