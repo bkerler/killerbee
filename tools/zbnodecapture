@@ -98,6 +98,7 @@ if __name__ == '__main__':
 
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
+        print([method for method in dir(kb) if callable(getattr(object, method))])
         kb.jammer_on()
         time.sleep(JAM_TIME_SEC)
         kb.jammer_off()
