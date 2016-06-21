@@ -98,7 +98,6 @@ if __name__ == '__main__':
 
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        print([method for method in dir(kb) if callable(getattr(object, method))])
         kb.jammer_on()
         time.sleep(JAM_TIME_SEC)
         kb.jammer_off()
@@ -112,7 +111,7 @@ if __name__ == '__main__':
         # Wait for another beacon request
         print('6. Listening for a beacon request from another device...')
         got_beacon_request = False
-        kb.sniffer_on()
+        kb.sniffer_on(new_channel)
         while not got_beacon_request:
             packet = kb.pnext()
             if packet:
@@ -131,7 +130,7 @@ if __name__ == '__main__':
         # Wait for association request
         print('8. Listening for association request.')
         got_assoc_request = False
-        kb.sniffer_on()
+        kb.sniffer_on(new_channel)
         while not got_assoc_request:
             packet = kb.pnext()
             if packet:
