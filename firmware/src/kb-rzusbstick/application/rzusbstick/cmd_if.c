@@ -659,12 +659,12 @@ static void cmd_if_sign_on(void *cmd_sign_on) {
 
     Usb_write_byte(RESP_SIGN_ON);
     Usb_write_byte(10);
-	Usb_write_byte('K');
-	Usb_write_byte('I');
-	Usb_write_byte('L');
-	Usb_write_byte('L');
-	Usb_write_byte('E');
-	Usb_write_byte('R');
+    Usb_write_byte('K');
+    Usb_write_byte('I');
+    Usb_write_byte('L');
+    Usb_write_byte('L');
+    Usb_write_byte('E');
+    Usb_write_byte('R');
     Usb_write_byte('B');
     Usb_write_byte('0');
     Usb_write_byte('0');
@@ -1005,7 +1005,7 @@ static void cmd_inject_frame(void *cmd_inject_frame) {
     uint8_t len = frame[1];
     inject_frame_status = air_capture_inject_frame(len, frame+2);
 
-	if (inject_frame_status == 0) {
+    if (inject_frame_status == 0) {
         inject_frame_status = RESP_SUCCESS;
     }
 
@@ -1013,7 +1013,7 @@ static void cmd_inject_frame(void *cmd_inject_frame) {
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     //Usb_write_byte(inject_frame_status);
-	Usb_write_byte(inject_frame_status);
+    Usb_write_byte(inject_frame_status);
     Usb_send_in();
 
     /* Release the transaction buffer. */
