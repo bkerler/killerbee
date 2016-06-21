@@ -92,7 +92,7 @@ if __name__ == '__main__':
                     print('  Got beacon request or orphan notification.')
                     got_beacon_request = True
                 else:
-                    print('  Ignoring packet (' + str(counter) + '): not beacon request.')
+                    print('  Ignoring packet (' + str(counter) + '): not beacon request or orphan notification.')
                     counter += 1
         kb.sniffer_off()
 
