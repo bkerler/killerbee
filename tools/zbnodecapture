@@ -79,8 +79,8 @@ if __name__ == '__main__':
         # Update timestamp
         print(beacon_response_bytes)
         beacon_response_bytes[2] = beacon_response_bytes[0:2] + \
-                bytearray([int(beacon_response_bytes[2]+3) % 256]) + \
-                beacon_response_bytes[3:]
+                bytearray([(beacon_response_bytes[2]+3) % 256]) #+ \
+                #beacon_response_bytes[3:]
 
         # Wait for another beacon request
         print('3. Listening for a beacon request or orphan notification from another device...')
