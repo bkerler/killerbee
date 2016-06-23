@@ -142,7 +142,9 @@ if __name__ == '__main__':
                 packet_bytes = bytearray(packet['bytes'])
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x01 as their 17th byte
-                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[17] == 0x01):
+                if (packet_bytes[0] & 0b111 == 0b011 and \
+                        len(packet_bytes) > 17 and \
+                        packet_bytes[17] == 0x01):
                     print('  Got association request.')
                     assoc_request_pkt_bytes = bytearray(packet['bytes'])
                     got_assoc_request = True
