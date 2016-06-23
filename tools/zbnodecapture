@@ -10,7 +10,7 @@ from killerbee import *
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
 # Number of channels to increment after jamming
-CHANNEL_INCREMENT = 1
+CHANNEL_INCREMENT = 0
 
 # Beacon request packet (captured via Wireshark)
 BEACON_REQUEST_PKT_BYTES = str(bytearray([
