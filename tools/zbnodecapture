@@ -77,7 +77,7 @@ if __name__ == '__main__':
             kb.sniffer_off()
 
         # Update timestamp
-        beacon_response_bytes[2] = beacon_response_bytes[0:2] + bytearray([beacon_response_bytes[2]+1]) + beacon_response_bytes[3:]
+        beacon_response_bytes[2] = beacon_response_bytes[0:2] + bytearray([(beacon_response_bytes[2]+1) % 256]) + beacon_response_bytes[3:]
 
         # Wait for another beacon request
         print('3. Listening for a beacon request or orphan notification from another device...')
