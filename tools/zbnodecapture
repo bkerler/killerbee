@@ -77,6 +77,7 @@ if __name__ == '__main__':
             kb.sniffer_off()
 
         # Update timestamp
+        print(beacon_response_bytes)
         beacon_response_bytes[2] = beacon_response_bytes[0:2] + \
                 bytearray([int(beacon_response_bytes[2]+3) % 256]) + \
                 beacon_response_bytes[3:]
