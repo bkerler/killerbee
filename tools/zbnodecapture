@@ -176,6 +176,7 @@ if __name__ == '__main__':
         print('10. Maintaining connection...')
         while True:
             sniffer_on = False
+            packet = None
             while not packet:
                 if not sniffer_on:
                     kb.sniffer_on()
