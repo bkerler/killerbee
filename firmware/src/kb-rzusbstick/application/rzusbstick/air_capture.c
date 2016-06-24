@@ -706,7 +706,7 @@ bool air_capture_reactive_jammer_on(void) {
     // Restart jamming after transmission finishes
     ac_should_continue_jamming = true;
     if (jamming_listen_enable()) {
-        ac_should_continue_jamming = true;
+        //ac_should_continue_jamming = true;
         LED_RED_ON();
         return true;
     }
@@ -720,7 +720,7 @@ bool air_capture_reactive_jammer_on(void) {
  */
 void air_capture_reactive_jammer_off(void) {
     // Do not restart jamming after transmission finishes
-    ac_should_continue_jamming = false;
+    //ac_should_continue_jamming = false;
     jamming_listen_disable();
     LED_RED_OFF();
 }
@@ -779,15 +779,14 @@ static bool jamming_listen_disable() {
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
 static uint8_t FRAME_READ_LEN = 8;
-static uint8_t g_buffer[8];
+static uint8_t g_buffer[1];
 static void jamming_listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Read the first few bytes of the frame
         read_frame_to_buf(&g_buffer, FRAME_READ_LEN);
 
         // Check if the received frame is a beacon request
-        //bool should_jam = (g_buffer[0] & 0x03 == 0x03) && (g_buffer[7] & 0x07 == 0x07);
-        bool should_jam = true;
+        bool should_jam = (g_buffer[0] & 0x07 == 0x03) && (g_buffer[7] == 0x07);
         if (should_jam) {
             // Stop listening (to prepare for transmission)
             jamming_listen_disable();
@@ -808,9 +807,9 @@ static void jamming_transmission_callback(uint8_t isr_event) {
         delay_us(TIME_CMD_FORCE_TRX_OFF);
         ac_state = AC_IDLE;
 
-        if (ac_should_continue_jamming) {
+        /*if (ac_should_continue_jamming) {
             jamming_listen_enable();
-        }
+        }*/
     }
 }
 
