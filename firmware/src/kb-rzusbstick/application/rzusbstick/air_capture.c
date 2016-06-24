@@ -779,19 +779,21 @@ static bool jamming_listen_disable() {
  *
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
-static uint8_t FRAME_READ_LEN = 9;
-static uint8_t g_buffer[9];
+static uint8_t FRAME_READ_LEN = 8;
+static uint8_t g_buffer[8];
 static void jamming_listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
-        // Record the RSSI and timestamp when we pick up a packet
-        //uint32_t time_stamp = vrt_timer_get_tick_cnt() / AC_TICK_PER_US;
-        //RF230_QUICK_SUBREGISTER_READ(0x06, 0x1F, 0, ac_rssi);
-
         // Read the first few bytes of the frame
         read_frame_to_buf(&g_buffer, FRAME_READ_LEN);
 
-        // Stop listening (to prepare for transmission)
-        jamming_listen_disable();
+        // Check if the received frame is a beacon request
+        bool should_jam = (g_buffer[0] & 0x03 == 0x03) && (g_buffer[7] & 0x07 == 0x07);
+        if (should_jam) {
+            // Stop listening (to prepare for transmission)
+            jamming_listen_disable();
+            // TODO: probably need more than one
+            send_jamming_frame();
+        }
     } else {
         ac_unknown_isr++;
     }

