@@ -97,7 +97,10 @@ if __name__ == '__main__':
         kb.sniffer_off()
 
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        kb.inject(JAM_PKT_BYTES)
+        counter = 0
+        while counter < 500:
+            kb.inject(JAM_PKT_BYTES)
+            counter += 1
         #kb.jammer_on()
         #time.sleep(JAM_TIME_SEC)
         #kb.jammer_off()
