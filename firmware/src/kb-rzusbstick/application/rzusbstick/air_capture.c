@@ -786,7 +786,8 @@ static void jamming_listen_callback(uint8_t isr_event) {
         read_frame_to_buf(&g_buffer, FRAME_READ_LEN);
 
         // Check if the received frame is a beacon request
-        bool should_jam = (g_buffer[0] & 0x03 == 0x03) && (g_buffer[7] & 0x07 == 0x07);
+        //bool should_jam = (g_buffer[0] & 0x03 == 0x03) && (g_buffer[7] & 0x07 == 0x07);
+        should_jam = true;
         if (should_jam) {
             // Stop listening (to prepare for transmission)
             jamming_listen_disable();
