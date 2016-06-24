@@ -69,7 +69,7 @@ if __name__ == '__main__':
                         beacon_response_bytes = bytearray(packet['bytes'])
                         got_beacon_response = True
                     else:
-                        print('  Ignoring packet: not beacon response or orphan notification.')
+                        print('  Ignoring packet: not beacon response.')
                     tries -= 1
                     if tries == 0:
                         print('  Failed to receive beacon response after ' + \
@@ -77,7 +77,7 @@ if __name__ == '__main__':
             kb.sniffer_off()
 
         # Wait for another beacon request
-        print('3. Listening for a beacon request or orphan notification from another device...')
+        print('3. Listening for a beacon request from another device...')
         got_beacon_request = False
         counter = 1
         kb.sniffer_on(args.channel)
@@ -87,12 +87,12 @@ if __name__ == '__main__':
                 packet_bytes = bytearray(packet['bytes'])
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x07 as their 7th byte
-                if (packet_bytes[0] & 0b111 == 0b011 and (packet_bytes[7] == 0x07 or \
-                        (len(packet_bytes) > 17 and packet_bytes[17] == 0x06))):
-                    print('  Got beacon request or orphan notification.')
+                if (packet_bytes[0] & 0b111 == 0b011 and (packet_bytes[7] == 0x07)): # or \
+                        #(len(packet_bytes) > 17 and packet_bytes[17] == 0x06))):
+                    print('  Got beacon request.')
                     got_beacon_request = True
                 else:
-                    print('  Ignoring packet (' + str(counter) + '): not beacon request or orphan notification.')
+                    print('  Ignoring packet (' + str(counter) + '): not beacon request.')
                     counter += 1
         kb.sniffer_off()
 
