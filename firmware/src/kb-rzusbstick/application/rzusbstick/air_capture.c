@@ -790,10 +790,13 @@ static void jamming_listen_callback(uint8_t isr_event) {
         // Check if the received frame is a beacon request
         bool should_jam = (g_buffer[0] & 0x07 == 0x03) && (g_buffer[7] == 0x07);
         if (should_jam) {
+            LED_BLUE_OFF();
             // Stop listening (to prepare for transmission)
             jamming_listen_disable();
             // TODO: probably need more than one
             send_jamming_frame();
+        } else {
+            LED_BLUE_ON();
         }
     } else {
         ac_unknown_isr++;
