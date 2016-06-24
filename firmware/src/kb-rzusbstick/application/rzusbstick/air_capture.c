@@ -86,7 +86,7 @@ static uint8_t *data_ptr; //!< Pointer current byte to send.
 static bool ac_should_continue_jamming = true;
 
 /*! \brief Frame with randomized data. Used by the jammer. */
-static const uint8_t jammer_frame_length = 127
+static const uint8_t jammer_frame_length = 127;
 const PROGMEM_DECLARE(static uint8_t jammer_frame[127]) = {                 \
                         186,38,120,91,206,116,184,22,42,239,243,204,139,78, \
                         83,10,226,215,183,60,86,76,181,102,219,30,87,238,   \
