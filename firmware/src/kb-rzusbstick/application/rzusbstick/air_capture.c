@@ -747,6 +747,7 @@ static bool jamming_listen_enable() {
             rf230_set_callback_handler(jamming_listen_callback);
             ac_state = AC_BUSY_CAPTURING;
             open_stream_status = true;
+            LED_ORANGE_ON();
         }
     }
 
@@ -768,6 +769,7 @@ static bool jamming_listen_disable() {
     if (TRX_OFF == rf230_subregister_read(SR_TRX_STATUS)) {
         ac_state = AC_IDLE;
         close_stream_status = true;
+        LED_ORANGE_OFF();
     }
 
     return close_stream_status;
