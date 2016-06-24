@@ -186,7 +186,7 @@ if __name__ == '__main__':
                 packet = kb.pnext()
                 if packet:
                     packet_bytes = bytearray(packet['bytes'])
-                    print('Got packet: ' + str(packet_bytes))
+                    print('Got packet: ' + str(list(packet_bytes)))
                     packet_seq_num = packet_bytes[2]
                     # Check for data requests.
                     # 1. Command header
@@ -204,7 +204,7 @@ if __name__ == '__main__':
                     sniffer_off = True
                     print('Sniffer off')
 
-                    kb.inject([0x02, 0x00, packet_seq_num])
+                    kb.inject(bytearray([0x02, 0x00, packet_seq_num]))
 
     except KeyboardInterrupt:
         print 'Shutting down'

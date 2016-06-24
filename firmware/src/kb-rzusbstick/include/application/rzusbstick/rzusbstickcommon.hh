@@ -92,9 +92,9 @@
 #define CMD_BOOT_WRITE_LOCKBITS       (0xBA)
 #define CMD_BOOT_READ_FUSES           (0xBB)
 
-#define CMD_RJ_SET_CHANNEL            (0xC0)
-#define CMD_RJ_ON                     (0xC1)
-#define CMD_RJ_OFF                    (0xC2)
+// Reactive jammer commands (AC mode)
+#define CMD_REACTIVE_JAMMER_ON        (0xC0)
+#define CMD_REACTIVE_JAMMER_OFF       (0xC1)
 
 // Stream and Events.
 #define EVENT_STREAM_AC_DATA          0x50

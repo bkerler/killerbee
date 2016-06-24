@@ -183,6 +183,9 @@ bool air_capture_jammer_on(void);
  */
 bool air_capture_jammer_off(void);
 
+bool air_capture_reactive_jammer_on(void);
+bool air_capture_reactive_jammer_off(void);
+
 //! @}
 #endif
 /*EOF*/

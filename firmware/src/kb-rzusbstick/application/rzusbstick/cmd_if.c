@@ -39,7 +39,6 @@
 
 #include "air_capture.h"
 #include "cmd_if.h"
-#include "reactive_jammer.h"
 
 #include "ieee802_15_4.h"
 #include "ieee802_15_4_const.h"
@@ -820,13 +819,6 @@ static void cmd_set_mode(void *cmd_set_mode) {
             cmd_if_state = CMD_IF_NWK_MODE;
             set_mode_status = RESP_SUCCESS;
         }
-    } else if (CMD_MODE_RJAM == (sm->mode)) {
-            if (true != reactive_jammer_init()) {
-                set_mode_status = RESP_HW_TIMEOUT;
-            } else {
-                cmd_if_state = CMD_IF_JAM_MODE;
-                set_mode_status = RESP_SUCCESS;
-            }
     } else {
         set_mode_status = RESP_SEMANTICAL_ERROR;
     }
@@ -846,7 +838,7 @@ static void cmd_reactive_jammer_on(void *cmd_reactive_jammer_on) {
     uint8_t open_status = RESP_SEMANTICAL_ERROR;
 
     // TODO: jamming is an infinite loop, so how do I do this properly?
-    if (true == reactive_jammer_on()) {
+    if (true == air_capture_reactive_jammer_on()) {
         open_status = RESP_SUCCESS;
     }
 
@@ -863,7 +855,7 @@ static void cmd_reactive_jammer_on(void *cmd_reactive_jammer_on) {
 static void cmd_reactive_jammer_off(void *cmd_reactive_jammer_off) {
     uint8_t open_status = RESP_SEMANTICAL_ERROR;
 
-    reactive_jammer_off();
+    air_capture_reactive_jammer_off();
     open_status = RESP_SUCCESS;
 
     /* Send response to the PC. */
@@ -1388,13 +1380,10 @@ static void cmd_if_dispatch(void *raw_cmd) {
       case CMD_SET_CHANNEL:
         cmd_set_channel(raw_cmd);
         break;
-      case CMD_RJ_SET_CHANNEL:
-        cmd_rj_set_channel(raw_cmd);
-        break;
-      case CMD_RJ_ON:
+      case CMD_REACTIVE_JAMMER_ON:
         cmd_reactive_jammer_on(raw_cmd);
         break;
-    case CMD_RJ_OFF:
+      case CMD_REACTIVE_JAMMER_OFF:
         cmd_reactive_jammer_off(raw_cmd);
         break;
       case CMD_OPEN_STREAM:

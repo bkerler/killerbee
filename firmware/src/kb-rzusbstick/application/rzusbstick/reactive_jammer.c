@@ -94,9 +94,6 @@ static bool init_rf(void) {
     /* Could be that we were sleeping before we got here. */
     delay_us(TIME_SLEEP_TO_TRX_OFF);
 
-    /* Could be that we were sleeping before we got here. */
-    delay_us(TIME_SLEEP_TO_TRX_OFF);
-
     /* Force transition to TRX_OFF and verify. */
     rf230_subregister_write(SR_TRX_CMD, CMD_FORCE_TRX_OFF);
     delay_us(TIME_P_ON_TO_TRX_OFF);
@@ -177,34 +174,6 @@ bool reactive_jammer_set_channel(uint8_t channel) {
 
     return ac_set_channel_status;
 }
-
-/*static void reactive_jammer(void) {
-    while (true) {
-        // Listen for incoming packets
-        jamming_listen_enable();
-
-        // Wait until a packet is received
-        // Will flash orange while waiting
-        wait_for_rx_start();
-
-        // Read the first few bytes of the frame
-        static uint8_t FRAME_READ_LEN = 4;
-        uint8_t* buf = (uint8_t*)malloc(sizeof(uint8_t) * FRAME_READ_LEN);
-        read_frame_to_buf(buf, FRAME_READ_LEN);
-
-        // Stop listening (to prepare for transmission)
-        jamming_listen_disable();
-
-        // TODO: Decide whether or not to jam
-        if (true) {
-            // Send a jamming frame
-            LED_ORANGE_ON();
-            send_jamming_frame();
-            LED_ORANGE_OFF();
-        }
-        LED_GREEN_ON();
-    }
-}*/
 
 /* This function will enable jamming. */
 bool reactive_jammer_on(void) {
