@@ -99,6 +99,7 @@ if __name__ == '__main__':
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
         counter = 0
         while counter < 150:
+            print(counter)
             kb.jammer_on()
             kb.jammer_off()
             counter += 1
