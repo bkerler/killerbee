@@ -781,7 +781,7 @@ static bool jamming_listen_disable() {
  *  \param[in] isr_event Event signaled by the radio transceiver.
  */
 static uint8_t FRAME_READ_LEN = 8;
-static uint8_t g_buffer[1];
+static uint8_t g_buffer[8];
 static void jamming_listen_callback(uint8_t isr_event) {
     if (RF230_RX_START_MASK == (isr_event & RF230_RX_START_MASK)) {
         // Read the first few bytes of the frame
@@ -789,7 +789,7 @@ static void jamming_listen_callback(uint8_t isr_event) {
 
         // Check if the received frame is a beacon request
         bool should_jam = (g_buffer[0] & 0x07 == 0x03) && (g_buffer[7] == 0x07);
-        if (!should_jam) {
+        if (should_jam) {
             LED_BLUE_OFF();
             // Stop listening (to prepare for transmission)
             jamming_listen_disable();
