@@ -61,6 +61,7 @@ if __name__ == '__main__':
                 if (packet_bytes[0] & 0b111 == 0b001 and packet_bytes[25] == 0x08):
                     print(' - Got link status!')
                     link_status_sn = packet_bytes[2]
+                    got_link_status = True
         kb.sniffer_off()
 
         # Send a beacon request and get the response
