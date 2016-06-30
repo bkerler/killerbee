@@ -10,7 +10,7 @@ from killerbee import *
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
 # Number of channels to increment after jamming
-CHANNEL_INCREMENT = 2
+CHANNEL_INCREMENT = 0
 
 # Beacon request packet (captured via Wireshark)
 BEACON_REQUEST_PKT_BYTES = str(bytearray([
@@ -97,12 +97,7 @@ if __name__ == '__main__':
         kb.sniffer_off()
 
         print('4. Jamming channel for ' + str(JAM_TIME_SEC) + ' seconds.')
-        counter = 0
-        while counter < 150:
-            print(counter)
-            kb.jammer_on()
-            kb.jammer_off()
-            counter += 1
+        # TODO nothing here because jamming is stupidly hard
 
         # Increment channel
         # TODO: Are channel scans incremental from 11 to 26?
