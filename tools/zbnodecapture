@@ -7,6 +7,9 @@ import time
 
 from killerbee import *
 
+def sleep_us(usec):
+    time.sleep(usec/1000000.0)
+
 BEACON_RESPONSE_LISTEN_TRIES = 10
 
 # Number of channels to increment after jamming
@@ -157,7 +160,7 @@ if __name__ == '__main__':
         for i in range(0,255):
             assoc_request_pkt_bytes[2] = i
             kb.inject(assoc_response_pkt_bytes)
-            sleep(0.01)
+            sleep_us((len(assoc_request_pkt_bytes) + 6)*32)
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
