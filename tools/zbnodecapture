@@ -135,18 +135,26 @@ if __name__ == '__main__':
 
             count += 1
 
-        # Wait for association request
-        print('8. Listening for association request.')
+        sniffer_on = False
         got_assoc_request = False
-        kb.sniffer_on()
-        assoc_request_pkt_bytes = None
-        while not got_assoc_request:
+        while ont got_assoc_request:
+            if not sniffer_on:
+                kb.sniffer_on()
             packet = kb.pnext()
+
             if packet:
                 packet_bytes = bytearray(packet['bytes'])
                 # Beacon requests have 0b011 at the end of their first byte
-                # and 0x01 as their 17th byte
-                if (packet_bytes[0] & 0b111 == 0b011 and \
+                # and 0x07 as their 7th byte
+                if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
+                    print('- Got beacon request. Replaying response.')
+                    kb.sniffer_off()
+                    sniffer_on = False
+                    # Update timestamp
+                    beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
+                    kb.inject(beacon_response_bytes)
+                # Assoc request
+                elif (packet_bytes[0] & 0b111 == 0b011 and \
                         len(packet_bytes) > 17 and \
                         packet_bytes[17] == 0x01):
                     print('  Got association request.')
