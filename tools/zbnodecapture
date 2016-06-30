@@ -108,8 +108,8 @@ if __name__ == '__main__':
         beacon_response_bytes = beacon_response_bytes[:-2]
 
         # NOTE: Beacon requests appear to occur twice
-        count = 2
-        while count > 0:
+        count = 0
+        while count < 2:
             # Wait for another beacon request
             print('6. Listening for a beacon request from another device...')
             got_beacon_request = False
