@@ -156,8 +156,8 @@ if __name__ == '__main__':
         print('9. Sending association response.')
         for i in range(0,255):
             assoc_request_pkt_bytes[2] = i
-            print(list(assoc_request_pkt_bytes))
             kb.inject(assoc_response_pkt_bytes)
+            sleep(0.01)
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
