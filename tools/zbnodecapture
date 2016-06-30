@@ -160,6 +160,7 @@ if __name__ == '__main__':
         assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
         for i in range(0,255):
             assoc_request_pkt_bytes[2] = i
+            print(len(assoc_request_pkt_bytes))
             kb.inject(assoc_response_pkt_bytes)
             sleep_us((len(assoc_request_pkt_bytes) + 6)*32)
 
