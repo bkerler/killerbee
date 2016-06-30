@@ -175,8 +175,7 @@ if __name__ == '__main__':
         # Remove FCS
         assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
         # Estimate sequence number
-        for i in range(-1,5):
-            kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+i]) + assoc_response_pkt_bytes[3:])
+        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+1]) + assoc_response_pkt_bytes[3:])
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
