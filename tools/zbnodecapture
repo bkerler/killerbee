@@ -137,7 +137,7 @@ if __name__ == '__main__':
 
         sniffer_on = False
         got_assoc_request = False
-        while ont got_assoc_request:
+        while not got_assoc_request:
             if not sniffer_on:
                 kb.sniffer_on()
             packet = kb.pnext()
