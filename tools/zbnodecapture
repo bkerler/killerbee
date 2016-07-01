@@ -149,6 +149,7 @@ if __name__ == '__main__':
                     beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
                     # Must copy the array before injecting because python lists are pass-by-reference...
                     kb.inject(bytearray(beacon_response_bytes))
+                    kb.inject(bytearray(beacon_response_bytes))
                     print('  - Replaying link status.')
                     link_status_bytes[2] = link_status_bytes[2]+1
                     kb.inject(bytearray(link_status_bytes))
