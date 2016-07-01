@@ -130,7 +130,6 @@ if __name__ == '__main__':
         sniffer_on = False
         got_assoc_request = False
         assoc_request_sequence_num = 0
-        sent_link_status = False
         print('- Listening for beacon / association requests from another device...')
         while not got_assoc_request:
             if not sniffer_on:
@@ -150,11 +149,10 @@ if __name__ == '__main__':
                     beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
                     # Must copy the array before injecting because python lists are pass-by-reference...
                     kb.inject(bytearray(beacon_response_bytes))
-                    if not sent_link_status:
-                        print('  - Replaying link status.')
-                        link_status_bytes[2] = link_status_bytes[2]+1
-                        kb.inject(bytearray(link_status_bytes))
-                        sent_link_status = True
+                    print('  - Replaying link status.')
+                    link_status_bytes[2] = link_status_bytes[2]+1
+                    kb.inject(bytearray(link_status_bytes))
+                    sent_link_status = True
                 # Assoc request
                 elif (packet_bytes[0] & 0b111 == 0b011 and \
                         len(packet_bytes) > 17 and \
