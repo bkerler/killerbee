@@ -129,7 +129,8 @@ if __name__ == '__main__':
 
         sniffer_on = False
         got_assoc_request = False
-        print('- Listening beacon / association requests from another device...')
+        assoc_request_sequence_num = 0
+        print('- Listening for beacon / association requests from another device...')
         while not got_assoc_request:
             if not sniffer_on:
                 kb.sniffer_on()
@@ -154,7 +155,11 @@ if __name__ == '__main__':
                     print('  Got association request.')
                     assoc_request_pkt_bytes = bytearray(packet['bytes'])
                     got_assoc_request = True
+                    assoc_request_sequence_num = packet_bytes[2]
         kb.sniffer_off()
+
+        print('- ACKing association request.')
+        kb.inject(bytearray([0x02, 0x00, assoc_request_sequence_num]))
 
         # Construct association response
         assoc_response_seq_num = assoc_request_pkt_bytes[2]+1
@@ -176,8 +181,8 @@ if __name__ == '__main__':
         print('- Sending association response.')
         # Remove FCS
         assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
-        # Estimate sequence number
-        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+1]) + assoc_response_pkt_bytes[3:])
+        # Estimate sequence number as last link status + 5
+        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+5]) + assoc_response_pkt_bytes[3:])
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
