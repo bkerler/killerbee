@@ -147,7 +147,8 @@ if __name__ == '__main__':
                     sniffer_on = False
                     # Update timestamp
                     beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
-                    kb.inject(beacon_response_bytes)
+                    # Must copy the array before injecting because python lists are pass-by-reference...
+                    kb.inject(bytearray(beacon_response_bytes))
                 # Assoc request
                 elif (packet_bytes[0] & 0b111 == 0b011 and \
                         len(packet_bytes) > 17 and \
