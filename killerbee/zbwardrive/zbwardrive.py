@@ -48,8 +48,6 @@ def startScan(verbose=True, include=[],
         print log_message
         return False
 
-    logging.info(log_message)
-
     devices = kbutils.devlist(include=include)
 
     for kbdev in devices:
