@@ -33,7 +33,6 @@ class Scanner(multiprocessing.Process):
         self.devstring = devstring    # Name of the device (for logging) 
         self.channels = channels      # Shared queue of channels
         self.channel = channel        # Shared memory of current channel
-        self.currentGPS = currentGPS  # Shared memorf of GPS data
         self.kill = kill              # Kill event
         self.output = output          # Output folder
         self.scanning_time = scanning_time  # How long to wait on a channel to see if it's active
@@ -158,15 +157,7 @@ class Scanner(multiprocessing.Process):
     def dump_packet(self, pdump, packet):
         rf_freq_mhz = (self.channel.value - 10) * 5 + 2400
         try:
-            # Do the GPS if we can
-            # Use KillerBee's hack to check the lat to see if GPS data is there
-            if self.currentGPS != None and 'lat' in self.currentGPS:
-                pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'],
-                             location=(self.currentGPS['lng'], self.currentGPS['lat'], 
-                                       self.currentGPS['alt']))
-            else:
-                print "GSP: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
-                pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
+            pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
         except IOError as e:
             log_message = "%s: Unable to write pcap (%s)." % (
                 self.devstring, e)
@@ -212,8 +203,6 @@ def create_device(device_id, verbose=True, timeout=10, tries_limit=5):
 
 def doScan(devices, verbose=True,
            output='.', scanning_time=2, capture_time=5):
-    currentGPS = None
-
     timeout = 10    # How long to wait for each zigbee device to sync
     tries_limit = 5 # How many retries to give a zigbee device to sync
     scanners = []   # Stored information about each Scanner class we spawn
@@ -237,7 +226,7 @@ def doScan(devices, verbose=True,
             tries_limit=tries_limit)
         scanner_proc = Scanner(
             kbdevice, device[0], channel, channels, verbose,
-            currentGPS, kill_event, output,
+            None, kill_event, output, # gps = None
             scanning_time, capture_time)
 
         # Add scanner information to scanners list
@@ -293,7 +282,7 @@ def doScan(devices, verbose=True,
                         timeout=timeout, tries_limit=tries_limit)
                     s["proc"] = Scanner(
                         s["dev"], s["devstring"], s["channel"], channels,
-                        verbose, currentGPS, s["kill"], output,
+                        verbose, None, s["kill"], output,
                         scanning_time, capture_time)
 
                     # Add the the list first in case start throws an error
