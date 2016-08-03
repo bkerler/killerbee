@@ -55,7 +55,7 @@ def startScan(verbose=True, include=[],
         logging.info(log_message)
         print log_message
 
-    log_message = "Sending output to {}".format(os.path.abspath(output))
+    log_message = "Sending output to {}".format(abspath(output))
     print log_message
     logging.info(log_message)
 
