@@ -30,40 +30,6 @@ def gpsdPoller(currentGPS):
     @arg currentGPS store relavent pieces of up-to-date GPS info
     '''
     return
-    import killerbee.zbwardrive.gps
-    import socket
-
-    gpsd = killerbee.zbwardrive.gps.gps()
-    gpsd.poll()
-    gpsd.stream()
-
-    try:
-        while True:
-            gpsd.poll()
-            if gpsd.fix.mode > 1: #1=NO_FIX, 2=FIX, 3=DGPS_FIX
-                lat = gpsd.fix.latitude
-                lng = gpsd.fix.longitude
-                alt = gpsd.fix.altitude
-                eph = gpsd.fix.epx
-                epv = gpsd.fix.epv
-                ept = gpsd.fix.ept
-                gpt = gpsd.fix.time
-                #print 'time utc    ' , gpsd.utc,' + ', gpsd.fix.time
-                currentGPS['lat'] = lat
-                currentGPS['lng'] = lng
-                currentGPS['alt'] = alt
-                log_message = "GPS: {}, {}, {}\n     {} epx:{} epv:{} ept:{}".format(lat, lng, alt, gpt, eph, epv, ept)
-                print log_message
-                logging.debug(log_message)
-            else:
-                log_message = "No GPS fix"
-                logging.info(log_message)
-                #TODO timeout lat/lng/alt values if too old...?
-    except KeyboardInterrupt:
-        log_message = "Got KeyboardInterrupt in gpsdPoller, returning." 
-        print log_message
-        logging.debug(log_message)
-        return
 
 # startScan
 # Detects attached interfaces
@@ -90,8 +56,6 @@ def startScan(verbose=True, include=[],
         print log_message
         return False
 
-    log_message = "gps: {}".format(ignore)
-    print log_message
     logging.info(log_message)
 
     devices = kbutils.devlist(include=include)
