@@ -23,14 +23,6 @@ def goodLng(lng):
 def goodAlt(alt):
     alt > -180000.00005 and alt < 180000.00005
 
-# GPS Poller
-def gpsdPoller(currentGPS):
-    '''
-    @type currentGPS multiprocessing.Manager dict manager
-    @arg currentGPS store relavent pieces of up-to-date GPS info
-    '''
-    return
-
 # startScan
 # Detects attached interfaces
 # Initiates scanning using doScan()
