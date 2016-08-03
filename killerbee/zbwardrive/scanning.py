@@ -222,8 +222,10 @@ def create_device(device_id, verbose=False, timeout=10, tries_limit=5):
     return kbdevice
 
 
-def doScan(devices, currentGPS, verbose=False,  
+def doScan(devices, verbose=False,
            output='.', scanning_time=2, capture_time=5):
+    currentGPS = None
+
     timeout = 10    # How long to wait for each zigbee device to sync
     tries_limit = 5 # How many retries to give a zigbee device to sync
     scanners = []   # Stored information about each Scanner class we spawn
@@ -248,7 +250,7 @@ def doScan(devices, currentGPS, verbose=False,
             tries_limit=tries_limit)
         scanner_proc = Scanner(
             kbdevice, device[0], channel, channels,  verbose,
-            currentGPS, kill_event, output, 
+            currentGPS, kill_event, output,
             scanning_time, capture_time)
 
         # Add scanner information to scanners list
@@ -270,7 +272,6 @@ def doScan(devices, currentGPS, verbose=False,
     try:
         while 1:
             for i, s in enumerate(scanners):
-                
                 # Wait on the join and then start it again if it died
                 s["proc"].join(1)
                 if not s["proc"].is_alive():

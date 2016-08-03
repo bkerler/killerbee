@@ -29,6 +29,7 @@ def gpsdPoller(currentGPS):
     @type currentGPS multiprocessing.Manager dict manager
     @arg currentGPS store relavent pieces of up-to-date GPS info
     '''
+    return
     import killerbee.zbwardrive.gps
     import socket
 
@@ -67,7 +68,7 @@ def gpsdPoller(currentGPS):
 # startScan
 # Detects attached interfaces
 # Initiates scanning using doScan()
-def startScan(currentGPS, verbose=False, include=[], 
+def startScan(verbose=False, include=[],
               ignore=None, output='.',
               scanning_time=5, capture_time=2):
 
@@ -94,7 +95,7 @@ def startScan(currentGPS, verbose=False, include=[],
         print log_message
     logging.info(log_message)
 
-    devices = kbutils.devlist(gps=ignore, include=include)
+    devices = kbutils.devlist(include=include)
 
     for kbdev in devices:
         log_message = 'Found device at %s: \'%s\'' % (kbdev[0], kbdev[1])
@@ -109,7 +110,7 @@ def startScan(currentGPS, verbose=False, include=[],
 
     kb.close()
     doScan(
-        devices, currentGPS, verbose=verbose, 
+        devices, verbose=verbose, 
         output=output, scanning_time=scanning_time, 
         capture_time=capture_time)
     return True

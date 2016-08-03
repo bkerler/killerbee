@@ -23,14 +23,8 @@ if __name__=='__main__':
     #                    help='Enable KillerBee\'s log-to-database functionality')
     #parser.add_argument('-a', '--agressive', dest='agressive', action='store_true',
     #                    help='Initiate capture on channels where packets were seen, even if no beacon response was received')
-    parser.add_argument('-g', '--gps', dest='gps', action='store_true',
-                        help='Connect to gpsd and grab location data as available to enhance PCAPs')
-    parser.add_argument('-f', '--fake', dest='fake_gps', action='store_true',
-                        help='Fakes a gps device for testing')
     parser.add_argument('-i', '--iface', '--dev', action='append', dest='include')
     #TODO make it be able to ignore a list!
-    parser.add_argument('--ignore', action='store', dest='ignore', default=None,
-                        help='Device to skip. Used as GPS if -g flag is set')
     parser.add_argument('-o', '--out', action='store', dest='output', default='.',
                         help='Where to write any output files')
     parser.add_argument('-s', '--scanningtime', action='store', dest='scanning_time', default=5,
@@ -49,27 +43,17 @@ if __name__=='__main__':
     else:
         logger = logging.getLogger()
         logger.disabled = True
-    
+
     # try-except block to catch keyboard interrupt.
     gpsp = None
     try:
         # Some shared state for multiprocessing use
         manager = Manager()
         devices = manager.dict()
-        currentGPS = None
-        if args.gps:
-            currentGPS = manager.dict()
-            gpsp = Process(target=wd.zbwardrive.gpsdPoller, args=(currentGPS, ))
-            gpsp.start()
-        elif args.fake_gps:
-            currentGPS = manager.dict()
-            currentGPS['lng'] = 90.0
-            currentGPS['lat'] = 90.0
-            currentGPS['alt'] = 90.0
 
         # TODO: check return value from startScan 
         wd.zbwardrive.startScan(
-            currentGPS, verbose=args.verbose, ignore=args.ignore, 
+            verbose=args.verbose, ignore=args.ignore, 
             include=args.include, output=args.output,
             scanning_time=int(args.scanning_time), 
             capture_time=int(args.capture_time))
