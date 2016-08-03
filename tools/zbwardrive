@@ -17,14 +17,11 @@ import killerbee.zbwardrive as wd
 if __name__=='__main__':
     # Command line parsing
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('-v', '--verbose', dest='verbose', action='store_true',
-                        help='Produce more output, for debugging')
     #parser.add_argument('-d', '--db', dest='dblog', action='store_true',
     #                    help='Enable KillerBee\'s log-to-database functionality')
     #parser.add_argument('-a', '--agressive', dest='agressive', action='store_true',
     #                    help='Initiate capture on channels where packets were seen, even if no beacon response was received')
     parser.add_argument('-i', '--iface', '--dev', action='append', dest='include')
-    #TODO make it be able to ignore a list!
     parser.add_argument('-o', '--out', action='store', dest='output', default='.',
                         help='Where to write any output files')
     parser.add_argument('-s', '--scanningtime', action='store', dest='scanning_time', default=5,
@@ -52,12 +49,11 @@ if __name__=='__main__':
 
         # TODO: check return value from startScan 
         wd.zbwardrive.startScan(
-            verbose=args.verbose, ignore=args.ignore, 
+            verbose=True,
             include=args.include, output=args.output,
-            scanning_time=int(args.scanning_time), 
+            scanning_time=int(args.scanning_time),
             capture_time=int(args.capture_time))
 
     except KeyboardInterrupt:
-        if args.verbose:
-            print 'Sutting down'
+        print 'Sutting down'
         logging.info('Shutting down')
