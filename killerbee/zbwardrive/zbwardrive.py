@@ -68,7 +68,7 @@ def gpsdPoller(currentGPS):
 # startScan
 # Detects attached interfaces
 # Initiates scanning using doScan()
-def startScan(verbose=False, include=[],
+def startScan(verbose=True, include=[],
               ignore=None, output='.',
               scanning_time=5, capture_time=2):
 
@@ -91,8 +91,7 @@ def startScan(verbose=False, include=[],
         return False
 
     log_message = "gps: {}".format(ignore)
-    if verbose:
-        print log_message
+    print log_message
     logging.info(log_message)
 
     devices = kbutils.devlist(include=include)
@@ -100,17 +99,15 @@ def startScan(verbose=False, include=[],
     for kbdev in devices:
         log_message = 'Found device at %s: \'%s\'' % (kbdev[0], kbdev[1])
         logging.info(log_message)
-        if verbose:
-            print log_message
+        print log_message
 
     log_message = "Sending output to {}".format(output)
-    if verbose:
-        print log_message
+    print log_message
     logging.info(log_message)
 
     kb.close()
     doScan(
-        devices, verbose=verbose, 
+        devices, verbose=True, 
         output=output, scanning_time=scanning_time, 
         capture_time=capture_time)
     return True

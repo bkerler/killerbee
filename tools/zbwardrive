@@ -45,7 +45,6 @@ if __name__=='__main__':
         logger.disabled = True
 
     # try-except block to catch keyboard interrupt.
-    gpsp = None
     try:
         # Some shared state for multiprocessing use
         manager = Manager()
@@ -62,4 +61,3 @@ if __name__=='__main__':
         if args.verbose:
             print 'Sutting down'
         logging.info('Shutting down')
-        if gpsp != None: gpsp.terminate()

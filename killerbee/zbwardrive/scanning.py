@@ -33,7 +33,6 @@ class Scanner(multiprocessing.Process):
         self.devstring = devstring    # Name of the device (for logging) 
         self.channels = channels      # Shared queue of channels
         self.channel = channel        # Shared memory of current channel
-        self.verbose = verbose        # Verbose flag
         self.currentGPS = currentGPS  # Shared memorf of GPS data
         self.kill = kill              # Kill event
         self.output = output          # Output folder
@@ -43,8 +42,7 @@ class Scanner(multiprocessing.Process):
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         log_message = "Scanning with {}".format(self.devstring)
-        if self.verbose:
-            print log_message
+        print log_message
         logging.debug(log_message)
 
         beacon = "\x03\x08\x00\xff\xff\xff\xff\x07" # beacon frame
@@ -56,8 +54,7 @@ class Scanner(multiprocessing.Process):
         while(1):
             if self.kill.is_set():
                 log_message = "{}: Kill event caught".format(self.devstring)
-                if self.verbose:
-                    print log_message
+                print log_message
                 logging.debug(log_message)
                 return
 
@@ -75,8 +72,7 @@ class Scanner(multiprocessing.Process):
             except Exception as e:
                 log_message = "%s: Failed to set channel to %d (%s)." % (
                     self.devstring, self.channel.value, e)
-                if self.verbose: 
-                    print log_message
+                print log_message
                 logging.error(log_message)
                 return
 
@@ -87,16 +83,14 @@ class Scanner(multiprocessing.Process):
             seqnum += 1
             log_message = "{}: Injecting a beacon request on channel {}".format(
                 self.devstring, self.channel.value) 
-            if self.verbose:
-                print log_message
+            print log_message
             logging.debug(log_message)
             try:
                 self.dev.inject(beaconinj)
             except Exception, e:
                 log_message = "%s: Unable to inject packet (%s)." % (
                     self.devstring, e)
-                if self.verbose:
-                    print log_message
+                print log_message
                 logging.error(log_message)
                 return
 
@@ -109,8 +103,7 @@ class Scanner(multiprocessing.Process):
                     if packet != None:
                         log_message = "{}: Found a frame on channel {}".format(
                             self.devstring, self.channel.value)
-                        if self.verbose:
-                            print log_message
+                        print log_message
                         logging.debug(log_message)
                         pdump = self.create_pcapdump()
                         self.dump_packet(pdump, packet)
@@ -119,9 +112,8 @@ class Scanner(multiprocessing.Process):
             except Exception as e:
                 log_message = "%s: Error in capturing packets (%s)." % (
                     self.devstring, e)
-                if self.verbose:
-                    print log_message
-                    print traceback.format_exc()
+                print log_message
+                print traceback.format_exc()
                 logging.error(log_message)
                 logging.error(traceback.format_exc())
                 return
@@ -137,8 +129,7 @@ class Scanner(multiprocessing.Process):
 
         # The sniffer should already be on
         log_message = "{}: capturing on channel {}".format(self.devstring, self.channel.value)
-        if self.verbose:
-            print log_message
+        print log_message
         logging.debug(log_message)
 
         # Loop and capture packets
@@ -153,8 +144,7 @@ class Scanner(multiprocessing.Process):
         pdump.close()
         log_message =  "{}: {} packets captured on channel {}".format(
             self.devstring, packet_count, self.channel.value)
-        if self.verbose:
-            print log_message
+        print log_message
         logging.debug(log_message)
 
         
@@ -195,7 +185,7 @@ def timeoutHandler(signum, frame):
 # We make this its own function so we can time it
 # and reset if it takes too long
 # (The api-motes have a habit of timing out at start)
-def create_device(device_id, verbose=False, timeout=10, tries_limit=5):
+def create_device(device_id, verbose=True, timeout=10, tries_limit=5):
     old_handler = signal.signal(signal.SIGALRM, timeoutHandler)
     tries = 0
     while(1):
@@ -206,14 +196,12 @@ def create_device(device_id, verbose=False, timeout=10, tries_limit=5):
         except TimeoutError:
             log_message = "{}: Creation timeout (try={}/{})".format(
                 device_id, tries, tries_limit)
-            if verbose:
-                print log_message
+            print log_message
             logging.warning(log_message)
             tries += 1
             if tries >= tries_limit:
                 log_message = "(%s): Failed to sync" % (device_id)
-                if verbose:
-                    print log_message
+                print log_message
                 logging.warning(log_message)
                 raise Exception(log_message)
         finally:
@@ -222,7 +210,7 @@ def create_device(device_id, verbose=False, timeout=10, tries_limit=5):
     return kbdevice
 
 
-def doScan(devices, verbose=False,
+def doScan(devices, verbose=True,
            output='.', scanning_time=2, capture_time=5):
     currentGPS = None
 
@@ -238,8 +226,7 @@ def doScan(devices, verbose=False,
     # Sync the devices and init the Scanners
     for device in devices:
         log_message =  "Creating {}".format(device[0])
-        if verbose:
-            print log_message
+        print log_message
         logging.debug(log_message)
 
         # Create Scanner
@@ -249,7 +236,7 @@ def doScan(devices, verbose=False,
             device[0], verbose=verbose, timeout=timeout,
             tries_limit=tries_limit)
         scanner_proc = Scanner(
-            kbdevice, device[0], channel, channels,  verbose,
+            kbdevice, device[0], channel, channels, verbose,
             currentGPS, kill_event, output,
             scanning_time, capture_time)
 
@@ -277,8 +264,7 @@ def doScan(devices, verbose=False,
                 if not s["proc"].is_alive():
                     log_message = "{}: Caught error. Respawning".format(
                         s["devstring"])
-                    if verbose:
-                        print log_message
+                    print log_message
                     logging.warning(log_message)
 
                     # Add the cashed channel back to the list
@@ -291,16 +277,14 @@ def doScan(devices, verbose=False,
                     except Exception as e:
                         log_message = "{}: Sniffer off error ({})".format(
                             s["devstring"],e)
-                        if verbose:
-                            print log_message
+                        print log_message
                         logging.warning(log_message)
                     try:
                         s["dev"].close()
                     except Exception as e:
                         log_message = "{}: Close error ({})".format(
                             s["devstring"],e)
-                        if verbose:
-                            print log_message
+                        print log_message
                         logging.warning(log_message)
 
                     # Resync the device and create another scanner
@@ -319,14 +303,12 @@ def doScan(devices, verbose=False,
 
     except KeyboardInterrupt:
         log_message = "doScan() ended by KeyboardInterrupt"
-        if verbose:
-            print log_message
+        print log_message
         logging.info(log_message)
     except Exception as e:
         log_message = "doScan() caught non-Keyboard error: (%s)\n" % (e)
         log_message += traceback.format_exc()
-        if verbose:
-            print log_message
+        print log_message
         logging.warning(log_message)
     finally:
         # Kill off all the children processes
