@@ -214,6 +214,7 @@ def doScan(devices, verbose=True,
 
     # Sync the devices and init the Scanners
     for device in devices:
+        print(device)
         log_message =  "Creating scanner {}".format(device[0])
         print log_message
         logging.debug(log_message)

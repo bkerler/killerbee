@@ -212,6 +212,7 @@ def devlist(vendor=None, product=None, gps=None, include=None):
         devlist = devlist_usb_v1x(vendor, product)
 
     for serialdev in get_serial_ports(include=include):
+        print("found: " + serialdev)
         if serialdev == gps_devstring:
             print("kbutils.devlist is skipping ignored/GPS device string {0}".format(serialdev)) #TODO remove debugging print
             continue
@@ -240,7 +241,7 @@ def devlist(vendor=None, product=None, gps=None, include=None):
             #NOTE: Enumerations of other IP connected sniffers go here.
             else:
                 print("kbutils.devlist has an unknown type of IP sniffer device ({0}).".format(ipaddr))
-    
+
     return devlist
 
 def get_serial_devs(seriallist):
