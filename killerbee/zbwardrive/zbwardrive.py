@@ -12,7 +12,7 @@ from usb import USBError
 
 from killerbee import KillerBee, kbutils
 from scanning import doScan
-
+from os.path import abspath
 
 def goodLat(lat):
     return lat > -180.00000005 and lat < 180.00000005
@@ -55,13 +55,13 @@ def startScan(verbose=True, include=[],
         logging.info(log_message)
         print log_message
 
-    log_message = "Sending output to {}".format(output)
+    log_message = "Sending output to {}".format(os.path.abspath(output))
     print log_message
     logging.info(log_message)
 
     kb.close()
     doScan(
-        devices, verbose=True, 
-        output=output, scanning_time=scanning_time, 
+        devices, verbose=True,
+        output=output, scanning_time=scanning_time,
         capture_time=capture_time)
     return True
