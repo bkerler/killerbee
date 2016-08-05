@@ -30,9 +30,11 @@ class Scanner(multiprocessing.Process):
                  scanning_time, capture_time):
         multiprocessing.Process.__init__(self)
         self.dev = device             # KB device
-        self.devstring = devstring    # Name of the device (for logging) 
+        self.devstring = devstring    # Name of the device (for logging)
         self.channels = channels      # Shared queue of channels
         self.channel = channel        # Shared memory of current channel
+        self.verbose = verbose        # Verbose flag
+        self.currentGPS = currentGPS  # Shared memorf of GPS data
         self.kill = kill              # Kill event
         self.output = output          # Output folder
         self.scanning_time = scanning_time  # How long to wait on a channel to see if it's active
@@ -41,7 +43,8 @@ class Scanner(multiprocessing.Process):
     def run(self):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         log_message = "Scanning with {}".format(self.devstring)
-        print log_message
+        if self.verbose:
+            print log_message
         logging.debug(log_message)
 
         beacon = "\x03\x08\x00\xff\xff\xff\xff\x07" # beacon frame
@@ -53,7 +56,8 @@ class Scanner(multiprocessing.Process):
         while(1):
             if self.kill.is_set():
                 log_message = "{}: Kill event caught".format(self.devstring)
-                print log_message
+                if self.verbose:
+                    print log_message
                 logging.debug(log_message)
                 return
 
@@ -71,7 +75,8 @@ class Scanner(multiprocessing.Process):
             except Exception as e:
                 log_message = "%s: Failed to set channel to %d (%s)." % (
                     self.devstring, self.channel.value, e)
-                print log_message
+                if self.verbose:
+                    print log_message
                 logging.error(log_message)
                 return
 
@@ -81,15 +86,17 @@ class Scanner(multiprocessing.Process):
             beaconinj = beaconp1 + "%c" % seqnum + beaconp2
             seqnum += 1
             log_message = "{}: Injecting a beacon request on channel {}".format(
-                self.devstring, self.channel.value) 
-            print log_message
+                self.devstring, self.channel.value)
+            if self.verbose:
+                print log_message
             logging.debug(log_message)
             try:
                 self.dev.inject(beaconinj)
             except Exception, e:
                 log_message = "%s: Unable to inject packet (%s)." % (
                     self.devstring, e)
-                print log_message
+                if self.verbose:
+                    print log_message
                 logging.error(log_message)
                 return
 
@@ -102,7 +109,8 @@ class Scanner(multiprocessing.Process):
                     if packet != None:
                         log_message = "{}: Found a frame on channel {}".format(
                             self.devstring, self.channel.value)
-                        print log_message
+                        if self.verbose:
+                            print log_message
                         logging.debug(log_message)
                         pdump = self.create_pcapdump()
                         self.dump_packet(pdump, packet)
@@ -111,8 +119,9 @@ class Scanner(multiprocessing.Process):
             except Exception as e:
                 log_message = "%s: Error in capturing packets (%s)." % (
                     self.devstring, e)
-                print log_message
-                print traceback.format_exc()
+                if self.verbose:
+                    print log_message
+                    print traceback.format_exc()
                 logging.error(log_message)
                 logging.error(traceback.format_exc())
                 return
@@ -128,7 +137,8 @@ class Scanner(multiprocessing.Process):
 
         # The sniffer should already be on
         log_message = "{}: capturing on channel {}".format(self.devstring, self.channel.value)
-        print log_message
+        if self.verbose:
+            print log_message
         logging.debug(log_message)
 
         # Loop and capture packets
@@ -143,26 +153,35 @@ class Scanner(multiprocessing.Process):
         pdump.close()
         log_message =  "{}: {} packets captured on channel {}".format(
             self.devstring, packet_count, self.channel.value)
-        print log_message
+        if self.verbose:
+            print log_message
         logging.debug(log_message)
 
-        
+
     def create_pcapdump(self):
         # Prep the pcap file
-        time_label = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S') 
+        time_label = datetime.datetime.utcnow().strftime('%Y%m%d-%H%M%S')
         fname = '/zb_c%s_%s.pcap' % (self.channel.value, time_label) #fname is -w equiv
         return PcapDumper(DLT_IEEE802_15_4, fname, ppi=True, folder=self.output)
 
-    
+
     def dump_packet(self, pdump, packet):
         rf_freq_mhz = (self.channel.value - 10) * 5 + 2400
         try:
-            pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
+            # Do the GPS if we can
+            # Use KillerBee's hack to check the lat to see if GPS data is there
+            if self.currentGPS != None and 'lat' in self.currentGPS:
+                pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'],
+                             location=(self.currentGPS['lng'], self.currentGPS['lat'],
+                                       self.currentGPS['alt']))
+            else:
+                print "GSP: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
+                pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
         except IOError as e:
             log_message = "%s: Unable to write pcap (%s)." % (
                 self.devstring, e)
             raise
-        
+
 
 # http://stackoverflow.com/questions/492519/timeout-on-a-python-function-call
 class TimeoutError(Exception):
@@ -171,12 +190,12 @@ class TimeoutError(Exception):
 def timeoutHandler(signum, frame):
     raise TimeoutError()
 
-    
+
 # Takes a device id and returns the Zigbee device
 # We make this its own function so we can time it
 # and reset if it takes too long
 # (The api-motes have a habit of timing out at start)
-def create_device(device_id, verbose=True, timeout=10, tries_limit=5):
+def create_device(device_id, verbose=False, timeout=10, tries_limit=5):
     old_handler = signal.signal(signal.SIGALRM, timeoutHandler)
     tries = 0
     while(1):
@@ -187,12 +206,14 @@ def create_device(device_id, verbose=True, timeout=10, tries_limit=5):
         except TimeoutError:
             log_message = "{}: Creation timeout (try={}/{})".format(
                 device_id, tries, tries_limit)
-            print log_message
+            if verbose:
+                print log_message
             logging.warning(log_message)
             tries += 1
             if tries >= tries_limit:
                 log_message = "(%s): Failed to sync" % (device_id)
-                print log_message
+                if verbose:
+                    print log_message
                 logging.warning(log_message)
                 raise Exception(log_message)
         finally:
@@ -201,7 +222,7 @@ def create_device(device_id, verbose=True, timeout=10, tries_limit=5):
     return kbdevice
 
 
-def doScan(devices, verbose=True,
+def doScan(devices, currentGPS, verbose=False,
            output='.', scanning_time=2, capture_time=5):
     timeout = 10    # How long to wait for each zigbee device to sync
     tries_limit = 5 # How many retries to give a zigbee device to sync
@@ -209,14 +230,15 @@ def doScan(devices, verbose=True,
     channels = multiprocessing.Queue() # Keeps track of channels
 
     # Add the channels to the queue
-    for i in range(11,26):
+    #for i in range(11,26):
+    for i in range(25,26):
         channels.put(i)
 
     # Sync the devices and init the Scanners
     for device in devices:
-        print(device)
-        log_message =  "Creating scanner {}".format(device[0])
-        print log_message
+        log_message =  "Creating {}".format(device[0])
+        if verbose:
+            print log_message
         logging.debug(log_message)
 
         # Create Scanner
@@ -226,8 +248,8 @@ def doScan(devices, verbose=True,
             device[0], verbose=verbose, timeout=timeout,
             tries_limit=tries_limit)
         scanner_proc = Scanner(
-            kbdevice, device[0], channel, channels, verbose,
-            None, kill_event, output, # gps = None
+            kbdevice, device[0], channel, channels,  verbose,
+            currentGPS, kill_event, output,
             scanning_time, capture_time)
 
         # Add scanner information to scanners list
@@ -249,12 +271,14 @@ def doScan(devices, verbose=True,
     try:
         while 1:
             for i, s in enumerate(scanners):
+
                 # Wait on the join and then start it again if it died
                 s["proc"].join(1)
                 if not s["proc"].is_alive():
                     log_message = "{}: Caught error. Respawning".format(
                         s["devstring"])
-                    print log_message
+                    if verbose:
+                        print log_message
                     logging.warning(log_message)
 
                     # Add the cashed channel back to the list
@@ -267,14 +291,16 @@ def doScan(devices, verbose=True,
                     except Exception as e:
                         log_message = "{}: Sniffer off error ({})".format(
                             s["devstring"],e)
-                        print log_message
+                        if verbose:
+                            print log_message
                         logging.warning(log_message)
                     try:
                         s["dev"].close()
                     except Exception as e:
                         log_message = "{}: Close error ({})".format(
                             s["devstring"],e)
-                        print log_message
+                        if verbose:
+                            print log_message
                         logging.warning(log_message)
 
                     # Resync the device and create another scanner
@@ -283,7 +309,7 @@ def doScan(devices, verbose=True,
                         timeout=timeout, tries_limit=tries_limit)
                     s["proc"] = Scanner(
                         s["dev"], s["devstring"], s["channel"], channels,
-                        verbose, None, s["kill"], output,
+                        verbose, currentGPS, s["kill"], output,
                         scanning_time, capture_time)
 
                     # Add the the list first in case start throws an error
@@ -293,12 +319,14 @@ def doScan(devices, verbose=True,
 
     except KeyboardInterrupt:
         log_message = "doScan() ended by KeyboardInterrupt"
-        print log_message
+        if verbose:
+            print log_message
         logging.info(log_message)
     except Exception as e:
         log_message = "doScan() caught non-Keyboard error: (%s)\n" % (e)
         log_message += traceback.format_exc()
-        print log_message
+        if verbose:
+            print log_message
         logging.warning(log_message)
     finally:
         # Kill off all the children processes
