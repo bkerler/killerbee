@@ -34,23 +34,24 @@ def gpsdPoller(currentGPS):
     @arg currentGPS store relavent pieces of up-to-date GPS info
     '''
     FIFOPATH = '/tmp/gpsfifo'
-    try:
-        while True:
+    while True:
+        try:
             with open(FIFOPATH, 'r') as f:
                 match = locPattern.match(f.read())
                 if match:
+                    #TODO timeout lat/lng/alt values if too old...?
                     currentGPS['lng'] = float(match.group(1))
                     currentGPS['lat'] = float(match.group(2))
                     currentGPS['alt'] = float(match.group(3))
-                    print "location updated: {}".format(parts, currentGPS)
+                    print "location updated: {}".format(currentGPS)
                 else:
-                    sleep(1)
-            #TODO timeout lat/lng/alt values if too old...?
-    except KeyboardInterrupt:
-        log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
-        print log_message
-        logging.debug(log_message)
-        return
+                    print "invalid location format"
+                sleep(1)
+        except KeyboardInterrupt:
+            log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
+            print log_message
+            logging.debug(log_message)
+            sleep(5)
 
 # startScan
 # Detects attached interfaces
