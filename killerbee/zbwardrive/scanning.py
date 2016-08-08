@@ -175,7 +175,7 @@ class Scanner(multiprocessing.Process):
                              location=(self.currentGPS['lng'], self.currentGPS['lat'],
                                        self.currentGPS['alt']))
             else:
-                print "GSP: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
+                print "GPS: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
                 pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
         except IOError as e:
             log_message = "%s: Unable to write pcap (%s)." % (
@@ -230,8 +230,8 @@ def doScan(devices, currentGPS, verbose=False,
     channels = multiprocessing.Queue() # Keeps track of channels
 
     # Add the channels to the queue
-    #for i in range(11,26):
-    for i in range(25,26):
+    #for i in range(11,27):
+    for i in range(11,26):
         channels.put(i)
 
     # Sync the devices and init the Scanners
