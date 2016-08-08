@@ -51,6 +51,11 @@ def gpsdPoller(currentGPS):
             log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
             print log_message
             logging.debug(log_message)
+            return
+        except IOError:
+            log_message = "gps poll file not found, sleeping 5 seconds"
+            print log_message
+            logging.debug(log_message)
             sleep(5)
 
 # startScan
