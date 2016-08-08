@@ -10,13 +10,10 @@ DAEMON2='sh /usr/bin/wardrive.sh'
 case "$1" in
   start)
     echo "Starting IoT setup process"
-    # Stopping the gpsd service
-    #service gpsd stop
-    # Restarting with the right USB
-    #gpsd $(/opt/killerbee/killerbee/zbwardrive/findgps.sh) -F /var/run/gpsd.sock
     # Start python script to connect to android device
     start-stop-daemon --exec $DAEMON --start --pidfile --pid 2 --background
     sleep 30
+    # start zbwardrive
     sh /usr/bin/zbwardrive.sh
     ;;
   *)
