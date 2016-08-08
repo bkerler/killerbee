@@ -175,7 +175,7 @@ class Scanner(multiprocessing.Process):
                              location=(self.currentGPS['lng'], self.currentGPS['lat'],
                                        self.currentGPS['alt']))
             else:
-                print "GSP: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
+                print "GPS: {} {}".format((self.currentGPS != None), ('lat' in self.currentGPS))
                 pdump.pcap_dump(packet[0], freq_mhz=rf_freq_mhz, ant_dbm=packet['dbm'])
         except IOError as e:
             log_message = "%s: Unable to write pcap (%s)." % (
