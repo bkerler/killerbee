@@ -7,6 +7,7 @@
 
 import logging
 import os
+import re
 from subprocess import call
 from time import sleep
 from usb import USBError
@@ -14,6 +15,8 @@ from usb import USBError
 from killerbee import KillerBee, kbutils
 from scanning import doScan
 
+floatRE = '([-+]?[0-9]*\.?[0-9]+)'
+locPattern = re.compile('^' + floatRE + '\|' + floatRE + '\|' + floatRE + ';$')
 
 def goodLat(lat):
     return -180.00000005 < lat < 180.00000005
@@ -34,11 +37,14 @@ def gpsdPoller(currentGPS):
     try:
         while True:
             with open(FIFOPATH, 'r') as f:
-                parts = f.readlines()[-1].strip().split('|')
-                currentGPS['lng'] = float(parts[0])
-                currentGPS['lat'] = float(parts[1])
-                currentGPS['alt'] = float(parts[2])
-            print "parts: [{}] {}".format(parts, currentGPS)
+                match = locPattern.match(f.read())
+                if match:
+                    currentGPS['lng'] = float(match.group(1))
+                    currentGPS['lat'] = float(match.group(2))
+                    currentGPS['alt'] = float(match.group(3))
+                    print "location updated: {}".format(parts, currentGPS)
+                else:
+                    sleep(1)
             #TODO timeout lat/lng/alt values if too old...?
     except KeyboardInterrupt:
         log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
