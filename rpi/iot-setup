@@ -11,7 +11,7 @@ case "$1" in
   start)
     echo "Starting IoT setup process"
     # ensure fifo is set up
-    rm /tmp/gpsfifo
+    rm /tmp/gpsfifo 2> /dev/null
     mkfifo /tmp/gpsfifo
     # Start python script to connect to android device
     start-stop-daemon --exec $DAEMON --start --pidfile --pid 2 --background
