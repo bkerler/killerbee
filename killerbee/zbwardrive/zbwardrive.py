@@ -29,37 +29,18 @@ def gpsdPoller(currentGPS):
     @type currentGPS multiprocessing.Manager dict manager
     @arg currentGPS store relavent pieces of up-to-date GPS info
     '''
-    import killerbee.zbwardrive.gps
-    import socket
-
-    gpsd = killerbee.zbwardrive.gps.gps()
-    gpsd.poll()
-    gpsd.stream()
-
+    FIFOPATH = '/tmp/gpsfifo'
     try:
         while True:
-            gpsd.poll()
-            if gpsd.fix.mode > 1: #1=NO_FIX, 2=FIX, 3=DGPS_FIX
-                lat = gpsd.fix.latitude
-                lng = gpsd.fix.longitude
-                alt = gpsd.fix.altitude
-                eph = gpsd.fix.epx
-                epv = gpsd.fix.epv
-                ept = gpsd.fix.ept
-                gpt = gpsd.fix.time
-                #print 'time utc    ' , gpsd.utc,' + ', gpsd.fix.time
-                currentGPS['lat'] = lat
-                currentGPS['lng'] = lng
-                currentGPS['alt'] = alt
-                log_message = "GPS: {}, {}, {}\n     {} epx:{} epv:{} ept:{}".format(lat, lng, alt, gpt, eph, epv, ept)
-                print log_message
-                logging.debug(log_message)
-            else:
-                log_message = "No GPS fix"
-                logging.info(log_message)
-                #TODO timeout lat/lng/alt values if too old...?
+            with open(FIFOPATH, 'r') as f:
+                parts = f.readlines()[-1].strip().split('|')
+                currentGPS['lng'] = float(parts[0])
+                currentGPS['lat'] = float(parts[1])
+                currentGPS['alt'] = float(parts[2])
+            print "parts: [{}] {}".format(parts, currentGPS)
+            #TODO timeout lat/lng/alt values if too old...?
     except KeyboardInterrupt:
-        log_message = "Got KeyboardInterrupt in gpsdPoller, returning." 
+        log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
         print log_message
         logging.debug(log_message)
         return
@@ -67,7 +48,7 @@ def gpsdPoller(currentGPS):
 # startScan
 # Detects attached interfaces
 # Initiates scanning using doScan()
-def startScan(currentGPS, verbose=False, include=[], 
+def startScan(currentGPS, verbose=False, include=[],
               ignore=None, output='.',
               scanning_time=5, capture_time=2):
 
@@ -109,7 +90,7 @@ def startScan(currentGPS, verbose=False, include=[],
 
     kb.close()
     doScan(
-        devices, currentGPS, verbose=verbose, 
-        output=output, scanning_time=scanning_time, 
+        devices, currentGPS, verbose=verbose,
+        output=output, scanning_time=scanning_time,
         capture_time=capture_time)
     return True
