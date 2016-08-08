@@ -16,13 +16,13 @@ from scanning import doScan
 
 
 def goodLat(lat):
-    return lat > -180.00000005 and lat < 180.00000005
+    return -180.00000005 < lat < 180.00000005
 
 def goodLng(lng):
     return goodLat(lng)
 
 def goodAlt(alt):
-    alt > -180000.00005 and alt < 180000.00005
+    return -180000.00005 < alt < 180000.00005
 
 # GPS Poller
 def gpsdPoller(currentGPS):

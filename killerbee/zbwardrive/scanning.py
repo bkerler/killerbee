@@ -230,8 +230,8 @@ def doScan(devices, currentGPS, verbose=False,
     channels = multiprocessing.Queue() # Keeps track of channels
 
     # Add the channels to the queue
-    #for i in range(11,26):
-    for i in range(25,26):
+    #for i in range(11,27):
+    for i in range(11,26):
         channels.put(i)
 
     # Sync the devices and init the Scanners
