@@ -33,6 +33,7 @@ def gpsdPoller(currentGPS):
     @type currentGPS multiprocessing.Manager dict manager
     @arg currentGPS store relavent pieces of up-to-date GPS info
     '''
+    print "starting to look for GPS"
     FIFOPATH = '/tmp/gpsfifo'
     while True:
         try:
@@ -43,9 +44,6 @@ def gpsdPoller(currentGPS):
                     currentGPS['lng'] = float(match.group(1))
                     currentGPS['lat'] = float(match.group(2))
                     currentGPS['alt'] = float(match.group(3))
-                    print "location updated: {}".format(currentGPS)
-                else:
-                    print "invalid location format"
                 sleep(1)
         except KeyboardInterrupt:
             log_message = "Got KeyboardInterrupt in gpsdPoller, returning."
@@ -57,6 +55,7 @@ def gpsdPoller(currentGPS):
             print log_message
             logging.debug(log_message)
             sleep(5)
+    print "MADE IT OUT OF THE FUNCTION"
 
 # startScan
 # Detects attached interfaces
