@@ -74,7 +74,7 @@ class PcapReader:
         Wrapper for pcap_next to mimic method for Daintree SNA.  See pcap_next()
         '''
         return self.pcap_next()
- 
+
     def pcap_next(self):
         '''
         Retrieves the next packet from the capture file.  Returns a list of
@@ -93,8 +93,8 @@ class PcapReader:
             return [None,None]
 
         rechdr = [
-                float("%s.%s"%(rechdrtmp[0],rechdrtmp[1])), 
-                rechdrtmp[2], 
+                float("%s.%s"%(rechdrtmp[0],rechdrtmp[1])),
+                rechdrtmp[2],
                 rechdrtmp[3]
                 ]
         if rechdr[1] > rechdr[2] or rechdr[1] > self._pcaphsnaplen or rechdr[2] > self._pcaphsnaplen:
@@ -116,17 +116,19 @@ class PcapDumper:
         @rtype: None
         '''
         if ppi: from killerbee.pcapdlt import DLT_PPI
-        self.ppi = ppi        
+        self.ppi = ppi
         if folder[-1] == "/":
             folder = folder[:-1]
         if not os.path.exists(folder):
             log_message = "PcapDump: Creating directory to store results"
             logging.debug(log_message)
             os.makedirs(folder)
-        self.__fh = open(folder+savefile, mode='wb')
+        self.filepath = folder + savefile
+        self.tempFilepath = self.filepath + '.part'
+        self.__fh = open(self.tempFilepath, mode='wb')
         self.datalink = datalink
         self.__fh.write(''.join([
-            struct.pack("I", PCAPH_MAGIC_NUM), 
+            struct.pack("I", PCAPH_MAGIC_NUM),
             struct.pack("H", PCAPH_VER_MAJOR),
             struct.pack("H", PCAPH_VER_MINOR),
             struct.pack("I", PCAPH_THISZONE),
@@ -135,7 +137,7 @@ class PcapDumper:
             struct.pack("I", DLT_PPI if self.ppi else self.datalink)
             ]))
 
-    def pcap_dump(self, packet, ts_sec=None, ts_usec=None, orig_len=None, 
+    def pcap_dump(self, packet, ts_sec=None, ts_usec=None, orig_len=None,
                   freq_mhz = None, ant_dbm = None, location = None):
         '''
         Appends a new packet to the libpcap file.  Optionally specify ts_sec
@@ -198,7 +200,7 @@ class PcapDumper:
                 if alt > -180000.00005 and alt < 180000.00005:
                     alt_i = int(round((alt + 180000.0) * 1e4))
                 elif math.isnan(alt):
-                    alt_i = 4294967295 
+                    alt_i = 4294967295
                 else:
                     raise Exception("Altitude value is out of expected range: %.8f" % alt)
                 # Build Geolocation PPI Header
@@ -272,3 +274,4 @@ class PcapDumper:
         @rtype: None
         '''
         self.__fh.close()
+        os.rename(self.tempFilepath, self.filepath)
