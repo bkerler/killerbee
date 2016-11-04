@@ -1,0 +1,31 @@
+#!/usr/bin/env python
+
+import sys
+import argparse
+
+from killerbee import *
+
+# Command line main function
+if __name__ == '__main__':
+    # Command-line arguments
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-c', '--channel', action='store', dest='channel', type=int, default=11)
+    parser.add_argument('-i', '--iface', '--dev', action='store', dest='devstring')
+    parser.add_argument('-s', '--stop', action='store_true')
+    args = parser.parse_args()
+
+    # try-except block to catch keyboard interrupt.
+    try:
+        kb = KillerBee(device=args.devstring)
+        if args.stop:
+            kb.reactive_jammer_off()
+            print 'Stopped jamming'
+        else:
+            if not args.channel:
+                print 'Must specify channel'
+                exit(1)
+            kb.reactive_jammer_on(args.channel)
+            print 'Started jamming'
+    except KeyboardInterrupt:
+        print 'Shutting down'
+

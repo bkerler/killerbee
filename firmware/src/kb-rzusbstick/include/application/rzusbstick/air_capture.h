@@ -7,9 +7,9 @@
  * \ingroup applRzUsbStick
  *
  *      The AirCapture application uses the radio transceiver as a passive
- *      listening device in a network to capture frames on the air and forward 
- *      them to a connected PC over USB. The AirCapture application is also 
- *      capable of doing semi-passive operations such as channel scans, 
+ *      listening device in a network to capture frames on the air and forward
+ *      them to a connected PC over USB. The AirCapture application is also
+ *      capable of doing semi-passive operations such as channel scans,
  *      injecting frames and jamming channels.
  *
  * \par Application note:
@@ -27,7 +27,7 @@
  *
  * Copyright (c) 2008 , Atmel Corporation. All rights reserved.
  *
- * Licensed under Atmel’s Limited License Agreement (RZRaven Evaluation and Starter Kit). 
+ * Licensed under Atmel’s Limited License Agreement (RZRaven Evaluation and Starter Kit).
  *****************************************************************************/
 #ifndef AIR_CAPTURE_H
 #define AIR_CAPTURE_H
@@ -46,7 +46,7 @@
 /*================================= TYEPDEFS         =========================*/
 /*! \brief Structure that defines the AirCapture Data Unit. */
 typedef struct ACDU_STRUCT_TAG {
-    uint8_t ac_id; //!< Event ID indicationg that this is an AirCapture. Always equal to: EVENT_STREAM_AC_DATA. 
+    uint8_t ac_id; //!< Event ID indicationg that this is an AirCapture. Always equal to: EVENT_STREAM_AC_DATA.
     uint8_t length; //!< Number of bytes stored in the ACDU, ac_id inclusive.
     uint32_t time_stamp; //!< When the frame was received. Measured in symbols: one tick = 16us.
     uint8_t rssi; //!< RSSI value for the received frame.
@@ -61,7 +61,7 @@ typedef struct ACDU_STRUCT_TAG {
  *
  *  \retval true The AirCapture application has been initialized and is ready for
  *               use.
- *  \retval false The AirCapture application could not be started. And no other 
+ *  \retval false The AirCapture application could not be started. And no other
  *                function in this API should be called.
  *
  *  \ingroup applAirCapture
@@ -73,11 +73,11 @@ bool air_capture_init(void);
  *         No other functions in the API should be called after this function
  *         has been executed.
  *
- *  \ingroup air_capture 
+ *  \ingroup air_capture
  */
 void air_capture_deinit(void);
 
-/*! \brief This function must be called periodically to get captured data from 
+/*! \brief This function must be called periodically to get captured data from
  *         the RF230 device driver over the USB interface to the connected PC.
  *
  *         The task function is basically an event pump, that will ensure that
@@ -123,7 +123,7 @@ bool air_capture_close_stream(void);
 /*! \brief This function is used to start a scan on the current channel.
  *
  *  After this function has been called it is important to call the air_capture_task
- *  function periodically to prevent loosing scan data. The tasking will ensure 
+ *  function periodically to prevent loosing scan data. The tasking will ensure
  *  that the event pump transports data from the storage buffers and to the
  *  PC.
  *
@@ -161,8 +161,8 @@ uint8_t air_capture_inject_frame(uint8_t length, uint8_t *frame);
 
 /*! \brief This function starts the jammer.
  *
- *  The jammer will start sending random data on the air without using CSMA 
- *  algorithm for channel access, and this way prevent other devices from 
+ *  The jammer will start sending random data on the air without using CSMA
+ *  algorithm for channel access, and this way prevent other devices from
  *  transmitting. This functionality is mainly used for test purposes. The duty
  *  cycle of the transmission is 100%, so any device within range shall evaluate
  *  the channel to be busy, and henche not send any frames.
@@ -182,6 +182,9 @@ bool air_capture_jammer_on(void);
  *  \ingroup air_capture
  */
 bool air_capture_jammer_off(void);
+
+bool air_capture_reactive_jammer_on(void);
+void air_capture_reactive_jammer_off(void);
 
 //! @}
 #endif

@@ -92,6 +92,10 @@
 #define CMD_BOOT_WRITE_LOCKBITS       (0xBA)
 #define CMD_BOOT_READ_FUSES           (0xBB)
 
+// Reactive jammer commands (AC mode)
+#define CMD_REACTIVE_JAMMER_ON        (0xC0)
+#define CMD_REACTIVE_JAMMER_OFF       (0xC1)
+
 // Stream and Events.
 #define EVENT_STREAM_AC_DATA          0x50
 #define EVENT_SNIFFER_SCAN_COMPLETE   0x51
@@ -152,6 +156,7 @@
 #define CMD_MODE_MAC (0x02)
 #define CMD_MODE_NWK (0x03)
 #define CMD_MODE_NONE (0x04)
+#define CMD_MODE_RJAM (0x05)
 
 // Scan types
 #define CMD_ED_SCAN      (0x00)

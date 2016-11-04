@@ -33,6 +33,8 @@ RZ_CMD_CLOSE_STREAM         = 0x0A  #: RZUSB opcode to close a stream for packet
 RZ_CMD_INJECT_FRAME         = 0x0D  #: RZUSB opcode to specify a frame to inject
 RZ_CMD_JAMMER_ON            = 0x0E  #: RZUSB opcode to turn the jammer function on
 RZ_CMD_JAMMER_OFF           = 0x0F  #: RZUSB opcode to turn the jammer function off
+RZ_CMD_REACTIVE_JAMMER_ON   = 0xC0  #: RZUSB opcode to turn the reactive jammer function on
+RZ_CMD_REACTIVE_JAMMER_OFF  = 0xC1  #: RZUSB opcode to turn the reactive jammer function off
 
 # Operating modes following RZ_CMD_SET_MODE function
 RZ_CMD_MODE_AC              = 0x00  #: RZUSB mode for aircapture (inject + sniff)
@@ -58,7 +60,7 @@ RZ_RESP_PRITMITIVE_UNKNOWN  = 0x8C #: RZUSB Response: Primitive Unknown Error
 RZ_RESP_COMMAND_UNKNOWN     = 0x8D #: RZUSB Response: Command Unknown Error
 RZ_RESP_BUSY_SCANING        = 0x8E #: RZUSB Response: Busy Scanning Error
 RZ_RESP_BUSY_CAPTURING      = 0x8F #: RZUSB Response: Busy Capturing Error
-RZ_RESP_OUT_OF_MEMORY       = 0x90 #: RZUSB Response: Out of Memory Error 
+RZ_RESP_OUT_OF_MEMORY       = 0x90 #: RZUSB Response: Out of Memory Error
 RZ_RESP_BUSY_JAMMING        = 0x91 #: RZUSB Response: Busy Jamming Error
 RZ_RESP_NOT_INITIALIZED     = 0x92 #: RZUSB Response: Not Initialized Error
 RZ_RESP_NOT_IMPLEMENTED     = 0x93 #: RZUSB Response: Opcode Not Implemented Error
@@ -227,6 +229,7 @@ class RZUSBSTICK:
             self.capabilities.setcapab(KBCapabilities.SNIFF, True)
             self.capabilities.setcapab(KBCapabilities.SETCHAN, True)
             self.capabilities.setcapab(KBCapabilities.INJECT, True)
+            self.capabilities.setcapab(KBCapabilities.PHYJAM, True)
         else:
             pass
 
@@ -247,7 +250,7 @@ class RZUSBSTICK:
     def __usb_write(self, endpoint, data):
         '''
         Write data to the USB device opened as self.handle.
-        
+
         @type endpoint: Integer
         @param endpoint: The USB endpoint to write to
         @type data: Mixed
@@ -363,9 +366,10 @@ class RZUSBSTICK:
     def jammer_off(self, channel=None):
         '''
         Not yet implemented.  Stay tuned.
-        @return: None
         @rtype: None
         '''
+        self.capabilities.require(KBCapabilities.PHYJAM)
+
         self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_JAMMER_OFF])
 
     # KillerBee expects the driver to implement this function
@@ -419,7 +423,7 @@ class RZUSBSTICK:
         packet += "\x00\x00"
 
         for pnum in xrange(count):
-            # Format for packet is opcode RZ_CMD_INJECT_FRAME, one-byte length, 
+            # Format for packet is opcode RZ_CMD_INJECT_FRAME, one-byte length,
             # packet data
             self.__usb_write(RZ_USB_COMMAND_EP, struct.pack("BB", RZ_CMD_INJECT_FRAME, len(packet)) + packet)
             time.sleep(delay)
@@ -482,7 +486,7 @@ class RZUSBSTICK:
         else:
             return None
             #raise Exception("Unrecognized AirCapture Data Response: 0x%02x" % pdata[0])
- 
+
     def ping(self, da, panid, sa, channel=None):
         '''
         Not yet implemented.
@@ -491,3 +495,18 @@ class RZUSBSTICK:
         '''
         raise Exception('Not yet implemented')
 
+    def reactive_jammer_on(self, channel=None):
+        self.capabilities.require(KBCapabilities.SNIFF)
+
+        if self.__cmdmode != RZ_CMD_MODE_AC:
+            self._set_mode(RZ_CMD_MODE_AC)
+
+        if channel != None:
+            self.set_channel(channel)
+
+        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_REACTIVE_JAMMER_ON])
+
+    def reactive_jammer_off(self, channel=None):
+        self.capabilities.require(KBCapabilities.SNIFF)
+
+        self.__usb_write(RZ_USB_COMMAND_EP, [RZ_CMD_REACTIVE_JAMMER_OFF])

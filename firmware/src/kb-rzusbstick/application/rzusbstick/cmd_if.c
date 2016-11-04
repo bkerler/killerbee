@@ -18,7 +18,7 @@
  *
  * Copyright (c) 2008 , Atmel Corporation. All rights reserved.
  *
- * Licensed under Atmel’s Limited License Agreement (RZRaven Evaluation and Starter Kit). 
+ * Licensed under Atmel’s Limited License Agreement (RZRaven Evaluation and Starter Kit).
  *****************************************************************************/
 
 /*================================= INCLUDES         =========================*/
@@ -192,6 +192,7 @@ typedef enum {
     CMD_IF_AC_MODE,
     CMD_IF_MAC_MODE,
     CMD_IF_NWK_MODE,
+    CMD_IF_JAM_MODE,
 } cmd_if_state_t;
 /*================================= GLOBAL VARIABLES =========================*/
 /*================================= LOCAL VARIABLES  =========================*/
@@ -256,7 +257,7 @@ static void cmd_set_parameter(void *cmd_set_parameter);
  */
 static void cmd_self_test(void *cmd_self_test);
 
-/*! \brief This is an internal command handler that validates the stack usage at 
+/*! \brief This is an internal command handler that validates the stack usage at
  *         the moment on the RZUSBSTICK.
  *
  *  \note This handler is not implemented yet.
@@ -321,7 +322,7 @@ static void cmd_channel_scan(void *cmd_channel_scan);
  */
 static void cmd_channel_scan_stop(void *cmd_channel_scan_stop);
 
-/*! \brief This is an internal command handler injects a new frame onto the 
+/*! \brief This is an internal command handler injects a new frame onto the
  *         network through the AirCapture application.
  *
  *  \param[in] cmd_inject_frame Pointer to a CMD_INJECT_FRAME command.
@@ -470,71 +471,71 @@ bool cmd_if_init(void) {
     /* Initialize local variables. */
     ndr = NULL;
     ieee_address = eep_read_ieee_address();
-    nwk_events_missed = 0;    
-    
+    nwk_events_missed = 0;
+
     for (uint8_t i = 0; (i < NWK_EVENT_FIFO_SIZE); i++) {
         uint8_t *nwk_event = (uint8_t *)MEM_ALLOC_ARRAY(uint8_t, CMD_EVENT_SIZE);
-        
+
         if (NULL == nwk_event) {
             goto init_failed;
         } else {
             nwk_event_fifo[i] = nwk_event;
         }
     }
-    
+
     /* Initialize USB devic driver. */
     usb_task_init(ieee_address);
-    
+
     /* Set up the transaction descriptor for the OUT end point where commands will
      * be received.
      */
     usb_trans_descriptor_t desc;
     desc.ep = EP_OUT;
     desc.done_callback = usb_transaction_done;
-    
+
     if (USB_SUCCESS != usb_ep_open(&desc)) {
         goto init_failed;
     }
-    
+
     cmd_if_state = CMD_IF_INITIALIZED;
-    
+
     return true;
-    
-    
-    
+
+
+
     /* Handle failed initialization. */
-    
-  
-  
+
+
+
     init_failed:
-    
+
     for (uint8_t i = 0; (i < NWK_EVENT_FIFO_SIZE); i++) {
         MEM_FREE(nwk_event_fifo[i]);
         nwk_event_fifo[i] = (uint8_t *)NULL;
     }
-    
+
     /* Close EP and turn the USB macro off. */
     usb_ep_close();
-    usb_task_deinit();  
-      
+    usb_task_deinit();
+
     return false;
 }
 
 
 void cmd_if_deinit(void) {
     if (CMD_IF_NOT_INITIALIZED == cmd_if_state) { return ; } // No point in turning off if not even started.
-    
+
     cmd_if_state = CMD_IF_NOT_INITIALIZED;
-    
+
     /* Clear any memory that potentially can be active. */
     MEM_FREE(ndr);
     ndr = NULL;
-        
+
     for (uint8_t i = 0; (i < NWK_EVENT_FIFO_SIZE); i++) {
         MEM_FREE(nwk_event_fifo[i]);
         nwk_event_fifo[i] = (uint8_t *)NULL;
     }
-    
+
     /* Close EP and turn the USB macro off. */
     usb_ep_close();
     usb_task_deinit();
@@ -546,19 +547,19 @@ void cmd_if_task(void) {
      * if any available.
      */
     if (CMD_IF_NWK_MODE != cmd_if_state) { return; }
-    
+
     /* Check if there is data to be transmitted. */
     if (0 == items_used) { return; }
-        
+
     /* Select the event EP. */
     UENUM = EP_EVENT;
-        
+
     /* Check that it is possible to fill at least one bank (64 bytes) in the DPRAM. */
     if ((UEINTX & (1 << TXINI)) != (1 << TXINI)) { return; }
-        
+
     /* ACK TX_IN. */
     UEINTX &= ~(1 << TXINI);
-        
+
     /* If there is no acdu allocated, but data left in the AirCapture fifo.
      * One acdu must be allocated from the fifo's tail, however the tail's
      * position will not be updated until the complete acdu is written.
@@ -573,60 +574,60 @@ void cmd_if_task(void) {
         } else if (1 == packets_left) {
             /* Send Zero Length Packet and then update tail pointer. */
             UEINTX &= ~(1 << FIFOCON);
-                
+
             ENTER_CRITICAL_REGION();
-                
+
             if ((NWK_EVENT_FIFO_SIZE - 1) == fifo_tail) {
                 fifo_tail = 0;
             } else {
                 fifo_tail++;
             }
-                
+
             items_used--;
             items_free++;
-                
-                
+
+
             LEAVE_CRITICAL_REGION();
-                
+
             return;
         }
     }
-    
+
     /* At least one byte to send. */
     do {
         UEDATX = *data_ptr;
         data_ptr++;
         bytes_left--;
     } while ((0 != bytes_left) && ((UEINTX & (1 << RWAL)) == (1 << RWAL)));
-        
+
     /* Either 64 bytes or the last byte in a packet is written. */
     packets_left--;
-        
+
     /* ACK writing to the bank. */
     UEINTX &= ~(1 << FIFOCON);
-        
+
     /* Check if it is time ti move tail. */
     if ((0 == bytes_left) && (0 == packets_left)) {
         ENTER_CRITICAL_REGION();
-                
+
         if ((NWK_EVENT_FIFO_SIZE - 1) == fifo_tail) {
             fifo_tail = 0;
         } else {
             fifo_tail++;
         }
-                
+
         items_used--;
         items_free++;
-                
-                
-        LEAVE_CRITICAL_REGION(); 
+
+
+        LEAVE_CRITICAL_REGION();
     }
 }
 
 
 static void reboot(void) {
     wdt_enable(WDTO_15MS);
-    
+
     while (true) {
         ;
     }
@@ -644,7 +645,7 @@ static void cmd_if_sign_off(void *cmd_sign_off) {
     Usb_send_control_in();
     Usb_write_byte(RESP_SUCCESS);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -654,22 +655,22 @@ static void cmd_if_sign_on(void *cmd_sign_on) {
     /* Respond to the CMD_SIGN_ON. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_SIGN_ON);
     Usb_write_byte(10);
-	Usb_write_byte('K');
-	Usb_write_byte('I');
-	Usb_write_byte('L');
-	Usb_write_byte('L');
-	Usb_write_byte('E');
-	Usb_write_byte('R');
+    Usb_write_byte('K');
+    Usb_write_byte('I');
+    Usb_write_byte('L');
+    Usb_write_byte('L');
+    Usb_write_byte('E');
+    Usb_write_byte('R');
     Usb_write_byte('B');
     Usb_write_byte('0');
     Usb_write_byte('0');
     Usb_write_byte('1');
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -678,11 +679,11 @@ static void cmd_if_sign_on(void *cmd_sign_on) {
 static void cmd_get_parameter(void *cmd_get_parameter) {
     /* Cast the raw command into the correct type. */
     cmd_get_parameter_t *cgp = (cmd_get_parameter_t *)cmd_get_parameter;
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     if (PARAM_NWK_MAX_CHILDREN == (cgp->parameter)) {
         Usb_write_byte(RESP_GET_PARAMETER);
         Usb_write_byte(0x01);
@@ -716,7 +717,7 @@ static void cmd_get_parameter(void *cmd_get_parameter) {
     }
 
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -726,11 +727,11 @@ static void cmd_set_parameter(void *cmd_set_parameter) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -740,11 +741,11 @@ static void cmd_self_test(void *cmd_self_test) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -754,11 +755,11 @@ static void cmd_check_stack_usage(void *cmd_check_stack_usage) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -768,11 +769,11 @@ static void cmd_memory_test(void *cmd_memory_test) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -781,7 +782,7 @@ static void cmd_memory_test(void *cmd_memory_test) {
 static void cmd_set_mode(void *cmd_set_mode) {
     /* Cast the raw command to the correct type. */
     cmd_set_mode_t *sm = (cmd_set_mode_t *)cmd_set_mode;
-    
+
     /* Reset internal variables. */
     fifo_head  = 0;
     fifo_tail  = 0;
@@ -791,14 +792,14 @@ static void cmd_set_mode(void *cmd_set_mode) {
     packets_left = 0;
     data_ptr = NULL;
     nwk_events_missed = 0;
-    
+
     /* Tear down any old modes that could be running. */
     air_capture_deinit();
     zigbee_deinit();
-        
+
     cmd_if_state = CMD_IF_INITIALIZED;
     uint8_t set_mode_status = RESP_SEMANTICAL_ERROR;
-    
+
     if (CMD_MODE_AC == (sm->mode)) {
         if (true != air_capture_init()) {
             set_mode_status = RESP_HW_TIMEOUT;
@@ -814,20 +815,75 @@ static void cmd_set_mode(void *cmd_set_mode) {
             zigbee_set_nlde_data_indication(cmd_nwk_data_indication);
             zigbee_set_nlme_join_indication(cmd_nwk_join_indication);
             zigbee_set_nlme_leave_indication(cmd_nwk_leave_indication);
-                
+
             cmd_if_state = CMD_IF_NWK_MODE;
             set_mode_status = RESP_SUCCESS;
         }
     } else {
         set_mode_status = RESP_SEMANTICAL_ERROR;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(set_mode_status);
     Usb_send_in();
-    
+
+    /* Release the transaction buffer. */
+    usb_ep_ack_transaction();
+}
+
+
+static void cmd_reactive_jammer_on(void *cmd_reactive_jammer_on) {
+    uint8_t open_status = RESP_SEMANTICAL_ERROR;
+
+    // TODO: jamming is an infinite loop, so how do I do this properly?
+    if (true == air_capture_reactive_jammer_on()) {
+        open_status = RESP_SUCCESS;
+    }
+
+    /* Send response to the PC. */
+    Usb_select_endpoint(EP_IN);
+    Usb_send_control_in();
+    Usb_write_byte(open_status);
+    Usb_send_in();
+
+    /* Release the transaction buffer. */
+    usb_ep_ack_transaction();
+}
+
+static void cmd_reactive_jammer_off(void *cmd_reactive_jammer_off) {
+    uint8_t open_status = RESP_SEMANTICAL_ERROR;
+
+    air_capture_reactive_jammer_off();
+    open_status = RESP_SUCCESS;
+
+    /* Send response to the PC. */
+    Usb_select_endpoint(EP_IN);
+    Usb_send_control_in();
+    Usb_write_byte(open_status);
+    Usb_send_in();
+
+    /* Release the transaction buffer. */
+    usb_ep_ack_transaction();
+}
+
+static void cmd_rj_set_channel(void *cmd_set_channel) {
+    /* Cast the raw command to the correct type. */
+    cmd_set_channel_t *sc = (cmd_set_channel_t *)cmd_set_channel;
+
+    /* Try to set the requested channel. */
+    uint8_t set_channel_status = RESP_SEMANTICAL_ERROR;
+    if (true == reactive_jammer_set_channel((sc->channel))) {
+        set_channel_status = RESP_SUCCESS;
+    }
+
+    /* Send response to the PC. */
+    Usb_select_endpoint(EP_IN);
+    Usb_send_control_in();
+    Usb_write_byte(set_channel_status);
+    Usb_send_in();
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -836,20 +892,20 @@ static void cmd_set_mode(void *cmd_set_mode) {
 static void cmd_set_channel(void *cmd_set_channel) {
     /* Cast the raw command to the correct type. */
     cmd_set_channel_t *sc = (cmd_set_channel_t *)cmd_set_channel;
-    
+
     /* Try to set the requested channel. */
     uint8_t set_channel_status = RESP_SEMANTICAL_ERROR;
     if (true != air_capture_set_channel((sc->channel))) {
     } else {
         set_channel_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(set_channel_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -857,19 +913,19 @@ static void cmd_set_channel(void *cmd_set_channel) {
 
 static void cmd_open_stream(void *cmd_open_stream) {
     uint8_t open_status = RESP_SEMANTICAL_ERROR;
-    
+
     /* Try to open the strean of captured frames. */
     if (true != air_capture_open_stream()) {
     } else {
         open_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(open_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -877,19 +933,19 @@ static void cmd_open_stream(void *cmd_open_stream) {
 
 static void cmd_close_stream(void *cmd_close_stream) {
     uint8_t close_status = RESP_SEMANTICAL_ERROR;
-    
+
     /* Try to close the strean of captured frames. */
     if (true != air_capture_close_stream()) {
     } else {
         close_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(close_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -898,11 +954,11 @@ static void cmd_close_stream(void *cmd_close_stream) {
 static void cmd_channel_scan(void *cmd_channel_scan) {
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -912,11 +968,11 @@ static void cmd_channel_scan_stop(void *cmd_channel_scan_stop) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -926,11 +982,11 @@ static void cmd_channel_scan_stop(void *cmd_channel_scan_stop) {
 static void cmd_inject_frame(void *cmd_inject_frame) {
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_NOT_IMPLEMENTED);
-        
+
     Usb_send_in();
-    
+
     usb_ep_ack_transaction();
 }
 */
@@ -940,18 +996,18 @@ static void cmd_inject_frame(void *cmd_inject_frame) {
     uint8_t inject_frame_status = RESP_PRIMITIVE_FAILED;
     uint8_t len = frame[1];
     inject_frame_status = air_capture_inject_frame(len, frame+2);
-	
-	if (inject_frame_status == 0) {
+
+    if (inject_frame_status == 0) {
         inject_frame_status = RESP_SUCCESS;
     }
-	
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     //Usb_write_byte(inject_frame_status);
-	Usb_write_byte(inject_frame_status);
+    Usb_write_byte(inject_frame_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -964,13 +1020,13 @@ static void cmd_jammer_on(void *cmd_jammer_on) {
     } else {
         jammer_on_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(jammer_on_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -983,13 +1039,13 @@ static void cmd_jammer_off(void *cmd_jammer_off) {
     } else {
         jammer_off_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     Usb_write_byte(jammer_off_status);
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -999,17 +1055,17 @@ static void cmd_enter_boot(void *cmd_enter_boot) {
     /* Respond to the CMD_ENTER_BOOT. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(RESP_SUCCESS);
-    
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
-    
+
     /* Delay so that the response is sent before bootloader section is entered. */
     delay_us(50000);
-    
+
     /* Set EEPROM magic and reset the device. */
     EEPUT(EE_BOOT_MAGIC_ADR, EE_BOOT_MAGIC_VALUE);
     reboot();
@@ -1019,7 +1075,7 @@ static void cmd_enter_boot(void *cmd_enter_boot) {
 static void cmd_nlde_data_request(void *cmd_nlde_data_request) {
     /* Cast raw command to correct type. */
     cmd_nlde_data_request_t *cndr = (cmd_nlde_data_request_t *)cmd_nlde_data_request;
-    
+
     /* First check if the frame length is valid. */
     if ((aMaxMACFrameSize - NWK_MIN_HEADER_OVERHEAD) < (cndr->length)) {
         /* Send response to the PC. */
@@ -1027,32 +1083,32 @@ static void cmd_nlde_data_request(void *cmd_nlde_data_request) {
         Usb_send_control_in();
         Usb_write_byte(RESP_SEMANTICAL_ERROR);
         Usb_send_in();
-        
+
         /* Release the transaction buffer. */
         usb_ep_ack_transaction();
-        
+
         return;
     }
-    
+
     /* Try to allocate necessary memory to build the NLDE_DATA.request message. A
      * variable with file scope must be used, since the final freeing of memory
      * is done when the NLDE_DATA.confirm is received.
      */
     ndr = (nlde_data_req_t *)MEM_ALLOC(nlde_data_req_t);
-    
+
     if (NULL == ndr) {
         /* Send response to the PC. */
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
         Usb_write_byte(RESP_OUT_OF_MEMORY);
         Usb_send_in();
-        
+
         /* Release the transaction buffer. */
         usb_ep_ack_transaction();
-        
+
         return;
     }
-    
+
     /* Build NLDE_DATA.request message. */
     ndr->dst_addr_mode = 0;
     ndr->dst_addr = cndr->dest_addr;
@@ -1062,7 +1118,7 @@ static void cmd_nlde_data_request(void *cmd_nlde_data_request) {
     ndr->nsdu = cndr->data;
     ndr->discovery_route = cndr->discovery_route;
     ndr->nlde_callback_data_confirm = cmd_nwk_data_confirm_callback;
-    
+
     /* Try to execute the primitive. */
     if (true != zigbee_data_request(ndr)) {
         /* Send response to the PC. */
@@ -1070,11 +1126,11 @@ static void cmd_nlde_data_request(void *cmd_nlde_data_request) {
         Usb_send_control_in();
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
         Usb_send_in();
-            
+
         /* Free any allocated memory. */
         MEM_FREE(ndr);
     }
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -1083,36 +1139,36 @@ static void cmd_nlde_data_request(void *cmd_nlde_data_request) {
 static void cmd_nlme_formation_request(void *cmd_nlme_formation_request) {
     /* Try to allocate memory for the NLME_FORMATION.request. */
     nlme_formation_req_t *nfr = (nlme_formation_req_t *)MEM_ALLOC(nlme_formation_req_t);
-    
+
     uint8_t formation_status = RESP_HW_TIMEOUT;
-    
+
     /* Verify if memory was allocated. */
     if (NULL == nfr) {
         formation_status = RESP_OUT_OF_MEMORY;
     } else {
         /* Extract parameters and issue the NLME_FORMATION.request primitive. */
         cmd_nlme_formation_request_t *cnfr = (cmd_nlme_formation_request_t *)cmd_nlme_formation_request;
-        
+
         nfr->channel = cnfr->channel;
         nfr->pan_id  = cnfr->pan_id;
-        
+
         if (true != zigbee_formation_request(nfr)) {
             formation_status = RESP_SEMANTICAL_ERROR;
         } else {
             formation_status = RESP_SUCCESS;
         }
-        
+
         MEM_FREE(nfr);
     }
 
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(formation_status);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -1121,21 +1177,21 @@ static void cmd_nlme_formation_request(void *cmd_nlme_formation_request) {
 static void cmd_nlme_permit_join_request(void *cmd_nlme_permit_join_request) {
     /* Extract parameters and issue the NLME_PERMIT_JOINING.request primitive. */
     cmd_nlme_permit_joining_request_t *cnpjr = (cmd_nlme_permit_joining_request_t *)cmd_nlme_permit_join_request;
-    
+
     uint8_t permit_status = RESP_SEMANTICAL_ERROR;
     if (true != zigbee_permit_joining(cnpjr->join_permitted)) {
     } else {
         permit_status = RESP_SUCCESS;
     }
-    
+
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     Usb_write_byte(permit_status);
-        
+
     Usb_send_in();
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -1144,19 +1200,19 @@ static void cmd_nlme_permit_join_request(void *cmd_nlme_permit_join_request) {
 static void cmd_nlme_join_request(void *cmd_nlme_join_request) {
     /* Cast raw command to correct type. */
     cmd_nlme_join_request_t *cnjr = (cmd_nlme_join_request_t *)cmd_nlme_join_request;
-    
+
     /* Request some memory to build the NLME_JOIN.request. */
     njr = (nlme_join_req_t *)MEM_ALLOC(nlme_join_req_t);
-    
+
     if (NULL == njr) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_OUT_OF_MEMORY);
-        
+
         Usb_send_in();
     }
-    
+
     /* Build the NLME_JOIN.request. */
     memcpy((void *)(&(njr->PANId)), (void *)(&(cnjr->PANId)), sizeof(uint16_t));
     njr->RejoinNetwork = cnjr->RejoinNetwork;
@@ -1164,20 +1220,20 @@ static void cmd_nlme_join_request(void *cmd_nlme_join_request) {
     njr->PowerSource = cnjr->PowerSource;
     njr->RxOnWhenIdle = cnjr->RxOnWhenIdle;
     njr->nlme_callback_join_confirm = cmd_nwk_join_confirm_callback;
-    
+
     /* Issue primitive. */
     if (true != zigbee_join_request(njr)) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
-        
+
         Usb_send_in();
-        
+
         MEM_FREE(njr);
     }
-    
-    
+
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -1186,19 +1242,19 @@ static void cmd_nlme_join_request(void *cmd_nlme_join_request) {
 static void cmd_nlme_leave_request(void *cmd_nlme_leave_request) {
     /* Cast raw command to correct type. */
     cmd_nlme_leave_request_t *cnlr = (cmd_nlme_leave_request_t *)cmd_nlme_leave_request;
-    
+
     /* Request some memory to build the NLME_JOIN.request. */
     nlr = (nlme_leave_req_t *)MEM_ALLOC(nlme_join_req_t);
-    
+
     if (NULL == nlr) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_OUT_OF_MEMORY);
-        
+
         Usb_send_in();
     }
-    
+
     /* Build the NLME_JOIN.request. */
     memcpy((void *)(&(nlr->DeviceAddress)), (void *)(&(cnlr->device_address)), sizeof(uint64_t));
     nlr->RemoveChildren = cnlr->remove_children;
@@ -1206,19 +1262,19 @@ static void cmd_nlme_leave_request(void *cmd_nlme_leave_request) {
     nlr->ReuseAddress = cnlr->reuse_address;
     nlr->Silent = cnlr->silent;
     nlr->nlme_callback_leave_confirm = cmd_nwk_leave_confirm_callback;
-    
+
     /* Issue primitive. */
     if (true != zigbee_leave_request(nlr)) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
-        
+
         Usb_send_in();
-        
+
         MEM_FREE(nlr);
     }
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
@@ -1227,75 +1283,75 @@ static void cmd_nlme_leave_request(void *cmd_nlme_leave_request) {
 static void cmd_nlme_discovery_request(void *cmd_nlme_discovery_request) {
     /* Cast raw command to correct type. */
     cmd_nlme_discovery_request_t *cndr = (cmd_nlme_discovery_request_t *)cmd_nlme_discovery_request;
-    
+
     /* Request some memory to build the NLME_JOIN.request. */
     nndr = (nlme_network_discovery_req_t *)MEM_ALLOC(nlme_network_discovery_req_t);
-    
+
     if (NULL == nndr) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_OUT_OF_MEMORY);
-        
+
         Usb_send_in();
     }
-    
+
     /* Build the NLME_NETWORK_DISCOVERY.request. */
     nndr->ChannelToScan = cndr->channel;
     nndr->ScanDuration = cndr->duration;
     nndr->nlme_callback_discovery_confirm = cmd_nwk_discovery_confirm_callback;
-    
+
     /* Issue primitive. */
     if (true != zigbee_network_discovery_request(nndr)) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
-        
+
         Usb_send_in();
-        
+
         MEM_FREE(nndr);
     }
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
 
 
-static void cmd_nlme_start_router_request(void *cmd_nlme_start_router_request) { 
+static void cmd_nlme_start_router_request(void *cmd_nlme_start_router_request) {
     /* Issue primitive. */
     if (NWK_SUCCESS != zigbee_start_router_request()) {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
-        
+
         Usb_send_in();
     } else {
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
-    
+
         Usb_write_byte(RESP_SUCCESS);
-        
-        Usb_send_in();    
+
+        Usb_send_in();
     }
-    
+
     /* Release the transaction buffer. */
     usb_ep_ack_transaction();
 }
 
 
 static void cmd_if_dispatch(void *raw_cmd) {
-    
+
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
     UEINTX |= (1 << RXOUTI);
-    
+
     /* First byte in all defined commands equals the command type. This byte is
      * used to execute the associated command handler.
      */
     uint8_t cmd = *(uint8_t *)raw_cmd;
-    
+
     switch (cmd) {
       case CMD_SIGN_OFF:
         cmd_if_sign_off(raw_cmd);
@@ -1323,6 +1379,12 @@ static void cmd_if_dispatch(void *raw_cmd) {
         break;
       case CMD_SET_CHANNEL:
         cmd_set_channel(raw_cmd);
+        break;
+      case CMD_REACTIVE_JAMMER_ON:
+        cmd_reactive_jammer_on(raw_cmd);
+        break;
+      case CMD_REACTIVE_JAMMER_OFF:
+        cmd_reactive_jammer_off(raw_cmd);
         break;
       case CMD_OPEN_STREAM:
         cmd_open_stream(raw_cmd);
@@ -1368,14 +1430,14 @@ static void cmd_if_dispatch(void *raw_cmd) {
         break;
       case CMD_NLME_START_ROUTER_REQUEST:
         cmd_nlme_start_router_request(raw_cmd);
-        break; 
+        break;
       default:
         /* Unsupported command. */
         Usb_select_endpoint(EP_IN);
         Usb_send_control_in();
         Usb_write_byte(RESP_COMMAND_UNKNOWN);
         Usb_send_in();
-        
+
         usb_ep_ack_transaction();
         break;
     }
@@ -1395,7 +1457,7 @@ static void usb_transaction_done(uint16_t length, uint8_t *data) {
         Usb_send_control_in();
         Usb_write_byte(RESP_SYNTACTICAL_ERROR);
         Usb_send_in();
-        
+
         usb_ep_ack_transaction();
     } else if (false == vrt_post_event(cmd_if_dispatch, (void *)data)) {
         /* Command could not be posted into the event system, notify the user about this. */
@@ -1403,7 +1465,7 @@ static void usb_transaction_done(uint16_t length, uint8_t *data) {
         Usb_send_control_in();
         Usb_write_byte(RESP_VRT_KERNEL_ERROR);
         Usb_send_in();
-        
+
         usb_ep_ack_transaction();
     }
 }
@@ -1416,15 +1478,15 @@ static void cmd_nwk_data_confirm_callback(nlde_data_conf_t *ndc) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     if (NWK_SUCCESS != (ndc->Status)) {
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
     } else {
         Usb_write_byte(RESP_SUCCESS);
     }
-    
+
     Usb_send_in();
-            
+
     /* Free any allocated memory. */
     MEM_FREE(ndr);
 }
@@ -1433,24 +1495,24 @@ static void cmd_nwk_data_confirm_callback(nlde_data_conf_t *ndc) {
 static void cmd_nwk_data_indication(nlde_data_ind_t *ndi) {
     /* Check if there is room to add this NWK_EVENT. */
     if (0 == items_free) { nwk_events_missed++; return; }
-    
+
     uint8_t *this_event = nwk_event_fifo[fifo_head];
-    
+
     ENTER_CRITICAL_REGION();
-    
+
     if ((NWK_EVENT_FIFO_SIZE - 1) == fifo_head) {
         fifo_head = 0;
     } else {
         fifo_head++;
     }
-        
+
     items_used++;
     items_free--;
-    
+
     LEAVE_CRITICAL_REGION();
-    
+
     uint8_t index = 0;
-    
+
     /* Start building the New Data event. */
     this_event[index++] = EVENT_NWK_DATA;
     this_event[index++] = 8 + (ndi->NsduLength);
@@ -1468,7 +1530,7 @@ static void cmd_nwk_join_confirm_callback(nlme_join_conf_t *njc) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     if (NWK_SUCCESS != (njc->Status)) {
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
     } else {
@@ -1476,9 +1538,9 @@ static void cmd_nwk_join_confirm_callback(nlme_join_conf_t *njc) {
         (uint8_t)ieee802_15_4_rx_enable();
         Usb_write_byte(RESP_SUCCESS);
     }
-    
+
     Usb_send_in();
-            
+
     /* Free any allocated memory. Allocated in: cmd_if_process_nlme_join_request. */
     MEM_FREE(njr);
 }
@@ -1487,22 +1549,22 @@ static void cmd_nwk_join_confirm_callback(nlme_join_conf_t *njc) {
 static void cmd_nwk_join_indication(nlme_join_ind_t *nji) {
     /* Check if there is room to add this NWK_EVENT. */
     if (0 == items_free) { nwk_events_missed++; return; }
-    
+
     uint8_t *this_event = nwk_event_fifo[fifo_head];
-    
+
     ENTER_CRITICAL_REGION();
-    
+
     if ((NWK_EVENT_FIFO_SIZE - 1) == fifo_head) {
         fifo_head = 0;
     } else {
         fifo_head++;
     }
-        
+
     items_used++;
     items_free--;
-    
+
     LEAVE_CRITICAL_REGION();
-    
+
     uint8_t index = 0;
 
     /* Start building the New Join event. */
@@ -1518,15 +1580,15 @@ static void cmd_nwk_leave_confirm_callback(nlme_leave_conf_t *nlc) {
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     if (NWK_SUCCESS != (nlc->Status)) {
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
     } else {
         Usb_write_byte(RESP_SUCCESS);
     }
-    
+
     Usb_send_in();
-            
+
     /* Free any allocated memory. Allocated in: cmd_if_process_nlme_leave_request. */
     MEM_FREE(nlr);
 }
@@ -1535,24 +1597,24 @@ static void cmd_nwk_leave_confirm_callback(nlme_leave_conf_t *nlc) {
 static void cmd_nwk_leave_indication(nlme_leave_ind_t *nli) {
     /* Check if there is room to add this NWK_EVENT. */
     if (0 == items_free) { nwk_events_missed++; return; }
-    
+
     uint8_t *this_event = nwk_event_fifo[fifo_head];
-    
+
     ENTER_CRITICAL_REGION();
-    
+
     if ((NWK_EVENT_FIFO_SIZE - 1) == fifo_head) {
         fifo_head = 0;
     } else {
         fifo_head++;
     }
-        
+
     items_used++;
     items_free--;
-    
+
     LEAVE_CRITICAL_REGION();
-    
+
     uint8_t index = 0;
-    
+
     /* Start building the New Leave event. */
     this_event[index++] = EVENT_NWK_LEAVE;
     this_event[index++] = 10;
@@ -1565,15 +1627,15 @@ static void cmd_nwk_discovery_confirm_callback(nlme_network_discovery_conf_t *nd
     /* Send response to the PC. */
     Usb_select_endpoint(EP_IN);
     Usb_send_control_in();
-    
+
     if (NWK_SUCCESS != (ndc->Status)) {
         Usb_write_byte(RESP_PRITMITIVE_FAILED);
     } else {
         Usb_write_byte(RESP_SUCCESS);
     }
-    
+
     Usb_send_in();
-            
+
     /* Free any allocated memory. Allocated in: cmd_if_process_nlme_discovery_request. */
     MEM_FREE(nndr);
 }
